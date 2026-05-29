@@ -136,8 +136,8 @@ class DashboardScreen extends ConsumerWidget {
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: theme.colorScheme.brightness == Brightness.light
-              ? Colors.slate.shade100
-              : Colors.slate.shade800,
+              ? Colors.grey.shade100
+              : Colors.grey.shade800,
         ),
       ),
       child: Column(
@@ -147,7 +147,7 @@ class DashboardScreen extends ConsumerWidget {
           Container(
             padding: const EdgeInsets.all(8.0),
             decoration: BoxDecoration(
-              color: iconColor.withOpacity(0.1),
+              color: iconColor.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(icon, color: iconColor, size: 24),

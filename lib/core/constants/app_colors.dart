@@ -57,15 +57,13 @@ class AppColors {
       colorScheme: const ColorScheme.light(
         primary: primaryLight,
         secondary: secondaryLight,
-        background: backgroundLight,
         surface: surfaceLight,
         error: doomRedLight,
         onPrimary: Colors.white,
         onSecondary: Colors.white,
-        onBackground: textPrimaryLight,
         onSurface: textPrimaryLight,
       ),
-      cardTheme: const CardTheme(
+      cardTheme: const CardThemeData(
         color: surfaceLight,
         elevation: 0,
         margin: EdgeInsets.zero,
@@ -88,15 +86,13 @@ class AppColors {
       colorScheme: const ColorScheme.dark(
         primary: primaryDark,
         secondary: secondaryDark,
-        background: backgroundDark,
         surface: surfaceDark,
         error: doomRedDark,
         onPrimary: Colors.black,
         onSecondary: Colors.black,
-        onBackground: textPrimaryDark,
         onSurface: textPrimaryDark,
       ),
-      cardTheme: const CardTheme(
+      cardTheme: const CardThemeData(
         color: surfaceDark,
         elevation: 0,
         margin: EdgeInsets.zero,

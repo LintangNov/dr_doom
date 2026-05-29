@@ -13,12 +13,7 @@ class StreakManager {
     required double dailyPeakDrs,
     required bool completedCognitiveBump,
   }) {
-    // 1. Logika pemutusan streak: Peak DRS > 70 tanpa menyelesaikan cognitive bump
-    if (dailyPeakDrs > 70.0 && !completedCognitiveBump) {
-      profile.currentStreak = 0;
-      profile.lastActiveDate = evaluationDate;
-      return profile;
-    }
+    // NO DRS-BASED RESET: Streak is preserved daily and only resets on true calendar-based inactivity (> 1 day).
 
     final lastActive = profile.lastActiveDate;
     if (lastActive == null) {

@@ -32,28 +32,23 @@ const ScrollSessionSchema = CollectionSchema(
       name: r'endTime',
       type: IsarType.dateTime,
     ),
-    r'hashCode': PropertySchema(
-      id: 3,
-      name: r'hashCode',
-      type: IsarType.long,
-    ),
     r'peakDrs': PropertySchema(
-      id: 4,
+      id: 3,
       name: r'peakDrs',
       type: IsarType.double,
     ),
     r'startTime': PropertySchema(
-      id: 5,
+      id: 4,
       name: r'startTime',
       type: IsarType.dateTime,
     ),
     r'swipeCount': PropertySchema(
-      id: 6,
+      id: 5,
       name: r'swipeCount',
       type: IsarType.long,
     ),
     r'tapCount': PropertySchema(
-      id: 7,
+      id: 6,
       name: r'tapCount',
       type: IsarType.long,
     )
@@ -91,11 +86,10 @@ void _scrollSessionSerialize(
   writer.writeString(offsets[0], object.appPackageName);
   writer.writeDouble(offsets[1], object.avgDrs);
   writer.writeDateTime(offsets[2], object.endTime);
-  writer.writeLong(offsets[3], object.hashCode);
-  writer.writeDouble(offsets[4], object.peakDrs);
-  writer.writeDateTime(offsets[5], object.startTime);
-  writer.writeLong(offsets[6], object.swipeCount);
-  writer.writeLong(offsets[7], object.tapCount);
+  writer.writeDouble(offsets[3], object.peakDrs);
+  writer.writeDateTime(offsets[4], object.startTime);
+  writer.writeLong(offsets[5], object.swipeCount);
+  writer.writeLong(offsets[6], object.tapCount);
 }
 
 ScrollSession _scrollSessionDeserialize(
@@ -109,10 +103,10 @@ ScrollSession _scrollSessionDeserialize(
     avgDrs: reader.readDouble(offsets[1]),
     endTime: reader.readDateTime(offsets[2]),
     id: id,
-    peakDrs: reader.readDouble(offsets[4]),
-    startTime: reader.readDateTime(offsets[5]),
-    swipeCount: reader.readLong(offsets[6]),
-    tapCount: reader.readLong(offsets[7]),
+    peakDrs: reader.readDouble(offsets[3]),
+    startTime: reader.readDateTime(offsets[4]),
+    swipeCount: reader.readLong(offsets[5]),
+    tapCount: reader.readLong(offsets[6]),
   );
   return object;
 }
@@ -131,14 +125,12 @@ P _scrollSessionDeserializeProp<P>(
     case 2:
       return (reader.readDateTime(offset)) as P;
     case 3:
-      return (reader.readLong(offset)) as P;
-    case 4:
       return (reader.readDouble(offset)) as P;
-    case 5:
+    case 4:
       return (reader.readDateTime(offset)) as P;
-    case 6:
+    case 5:
       return (reader.readLong(offset)) as P;
-    case 7:
+    case 6:
       return (reader.readLong(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -154,7 +146,9 @@ List<IsarLinkBase<dynamic>> _scrollSessionGetLinks(ScrollSession object) {
 }
 
 void _scrollSessionAttach(
-    IsarCollection<dynamic> col, Id id, ScrollSession object) {}
+    IsarCollection<dynamic> col, Id id, ScrollSession object) {
+  object.id = id;
+}
 
 extension ScrollSessionQueryWhereSort
     on QueryBuilder<ScrollSession, ScrollSession, QWhere> {
@@ -489,62 +483,6 @@ extension ScrollSessionQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
         property: r'endTime',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
-    });
-  }
-
-  QueryBuilder<ScrollSession, ScrollSession, QAfterFilterCondition>
-      hashCodeEqualTo(int value) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'hashCode',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<ScrollSession, ScrollSession, QAfterFilterCondition>
-      hashCodeGreaterThan(
-    int value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'hashCode',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<ScrollSession, ScrollSession, QAfterFilterCondition>
-      hashCodeLessThan(
-    int value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'hashCode',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<ScrollSession, ScrollSession, QAfterFilterCondition>
-      hashCodeBetween(
-    int lower,
-    int upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'hashCode',
         lower: lower,
         includeLower: includeLower,
         upper: upper,
@@ -905,19 +843,6 @@ extension ScrollSessionQuerySortBy
     });
   }
 
-  QueryBuilder<ScrollSession, ScrollSession, QAfterSortBy> sortByHashCode() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'hashCode', Sort.asc);
-    });
-  }
-
-  QueryBuilder<ScrollSession, ScrollSession, QAfterSortBy>
-      sortByHashCodeDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'hashCode', Sort.desc);
-    });
-  }
-
   QueryBuilder<ScrollSession, ScrollSession, QAfterSortBy> sortByPeakDrs() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'peakDrs', Sort.asc);
@@ -1010,19 +935,6 @@ extension ScrollSessionQuerySortThenBy
     });
   }
 
-  QueryBuilder<ScrollSession, ScrollSession, QAfterSortBy> thenByHashCode() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'hashCode', Sort.asc);
-    });
-  }
-
-  QueryBuilder<ScrollSession, ScrollSession, QAfterSortBy>
-      thenByHashCodeDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'hashCode', Sort.desc);
-    });
-  }
-
   QueryBuilder<ScrollSession, ScrollSession, QAfterSortBy> thenById() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.asc);
@@ -1109,12 +1021,6 @@ extension ScrollSessionQueryWhereDistinct
     });
   }
 
-  QueryBuilder<ScrollSession, ScrollSession, QDistinct> distinctByHashCode() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'hashCode');
-    });
-  }
-
   QueryBuilder<ScrollSession, ScrollSession, QDistinct> distinctByPeakDrs() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'peakDrs');
@@ -1167,12 +1073,6 @@ extension ScrollSessionQueryProperty
     });
   }
 
-  QueryBuilder<ScrollSession, int, QQueryOperations> hashCodeProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'hashCode');
-    });
-  }
-
   QueryBuilder<ScrollSession, double, QQueryOperations> peakDrsProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'peakDrs');
@@ -1197,31 +1097,3 @@ extension ScrollSessionQueryProperty
     });
   }
 }
-
-// **************************************************************************
-// JsonSerializableGenerator
-// **************************************************************************
-
-_ScrollSession _$ScrollSessionFromJson(Map<String, dynamic> json) =>
-    _ScrollSession(
-      id: (json['id'] as num?)?.toInt(),
-      startTime: DateTime.parse(json['startTime'] as String),
-      endTime: DateTime.parse(json['endTime'] as String),
-      appPackageName: json['appPackageName'] as String,
-      peakDrs: (json['peakDrs'] as num).toDouble(),
-      avgDrs: (json['avgDrs'] as num).toDouble(),
-      swipeCount: (json['swipeCount'] as num).toInt(),
-      tapCount: (json['tapCount'] as num).toInt(),
-    );
-
-Map<String, dynamic> _$ScrollSessionToJson(_ScrollSession instance) =>
-    <String, dynamic>{
-      'id': instance.id,
-      'startTime': instance.startTime.toIso8601String(),
-      'endTime': instance.endTime.toIso8601String(),
-      'appPackageName': instance.appPackageName,
-      'peakDrs': instance.peakDrs,
-      'avgDrs': instance.avgDrs,
-      'swipeCount': instance.swipeCount,
-      'tapCount': instance.tapCount,
-    };

@@ -27,33 +27,28 @@ const UserProfileSchema = CollectionSchema(
       name: r'currentStreak',
       type: IsarType.long,
     ),
-    r'hashCode': PropertySchema(
-      id: 2,
-      name: r'hashCode',
-      type: IsarType.long,
-    ),
     r'highRiskApps': PropertySchema(
-      id: 3,
+      id: 2,
       name: r'highRiskApps',
       type: IsarType.stringList,
     ),
     r'lastActiveDate': PropertySchema(
-      id: 4,
+      id: 3,
       name: r'lastActiveDate',
       type: IsarType.dateTime,
     ),
     r'longestStreak': PropertySchema(
-      id: 5,
+      id: 4,
       name: r'longestStreak',
       type: IsarType.long,
     ),
     r'totalXp': PropertySchema(
-      id: 6,
+      id: 5,
       name: r'totalXp',
       type: IsarType.long,
     ),
     r'unlockedBadgeIds': PropertySchema(
-      id: 7,
+      id: 6,
       name: r'unlockedBadgeIds',
       type: IsarType.stringList,
     )
@@ -103,12 +98,11 @@ void _userProfileSerialize(
 ) {
   writer.writeLong(offsets[0], object.currentLevel);
   writer.writeLong(offsets[1], object.currentStreak);
-  writer.writeLong(offsets[2], object.hashCode);
-  writer.writeStringList(offsets[3], object.highRiskApps);
-  writer.writeDateTime(offsets[4], object.lastActiveDate);
-  writer.writeLong(offsets[5], object.longestStreak);
-  writer.writeLong(offsets[6], object.totalXp);
-  writer.writeStringList(offsets[7], object.unlockedBadgeIds);
+  writer.writeStringList(offsets[2], object.highRiskApps);
+  writer.writeDateTime(offsets[3], object.lastActiveDate);
+  writer.writeLong(offsets[4], object.longestStreak);
+  writer.writeLong(offsets[5], object.totalXp);
+  writer.writeStringList(offsets[6], object.unlockedBadgeIds);
 }
 
 UserProfile _userProfileDeserialize(
@@ -120,12 +114,12 @@ UserProfile _userProfileDeserialize(
   final object = UserProfile(
     currentLevel: reader.readLong(offsets[0]),
     currentStreak: reader.readLong(offsets[1]),
-    highRiskApps: reader.readStringList(offsets[3]) ?? [],
+    highRiskApps: reader.readStringList(offsets[2]) ?? [],
     id: id,
-    lastActiveDate: reader.readDateTimeOrNull(offsets[4]),
-    longestStreak: reader.readLong(offsets[5]),
-    totalXp: reader.readLong(offsets[6]),
-    unlockedBadgeIds: reader.readStringList(offsets[7]) ?? [],
+    lastActiveDate: reader.readDateTimeOrNull(offsets[3]),
+    longestStreak: reader.readLong(offsets[4]),
+    totalXp: reader.readLong(offsets[5]),
+    unlockedBadgeIds: reader.readStringList(offsets[6]) ?? [],
   );
   return object;
 }
@@ -142,16 +136,14 @@ P _userProfileDeserializeProp<P>(
     case 1:
       return (reader.readLong(offset)) as P;
     case 2:
-      return (reader.readLong(offset)) as P;
-    case 3:
       return (reader.readStringList(offset) ?? []) as P;
-    case 4:
+    case 3:
       return (reader.readDateTimeOrNull(offset)) as P;
+    case 4:
+      return (reader.readLong(offset)) as P;
     case 5:
       return (reader.readLong(offset)) as P;
     case 6:
-      return (reader.readLong(offset)) as P;
-    case 7:
       return (reader.readStringList(offset) ?? []) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -167,7 +159,9 @@ List<IsarLinkBase<dynamic>> _userProfileGetLinks(UserProfile object) {
 }
 
 void _userProfileAttach(
-    IsarCollection<dynamic> col, Id id, UserProfile object) {}
+    IsarCollection<dynamic> col, Id id, UserProfile object) {
+  object.id = id;
+}
 
 extension UserProfileQueryWhereSort
     on QueryBuilder<UserProfile, UserProfile, QWhere> {
@@ -353,61 +347,6 @@ extension UserProfileQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
         property: r'currentStreak',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
-    });
-  }
-
-  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition> hashCodeEqualTo(
-      int value) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'hashCode',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
-      hashCodeGreaterThan(
-    int value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'hashCode',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
-      hashCodeLessThan(
-    int value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'hashCode',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition> hashCodeBetween(
-    int lower,
-    int upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'hashCode',
         lower: lower,
         includeLower: includeLower,
         upper: upper,
@@ -1156,18 +1095,6 @@ extension UserProfileQuerySortBy
     });
   }
 
-  QueryBuilder<UserProfile, UserProfile, QAfterSortBy> sortByHashCode() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'hashCode', Sort.asc);
-    });
-  }
-
-  QueryBuilder<UserProfile, UserProfile, QAfterSortBy> sortByHashCodeDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'hashCode', Sort.desc);
-    });
-  }
-
   QueryBuilder<UserProfile, UserProfile, QAfterSortBy> sortByLastActiveDate() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'lastActiveDate', Sort.asc);
@@ -1232,18 +1159,6 @@ extension UserProfileQuerySortThenBy
       thenByCurrentStreakDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'currentStreak', Sort.desc);
-    });
-  }
-
-  QueryBuilder<UserProfile, UserProfile, QAfterSortBy> thenByHashCode() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'hashCode', Sort.asc);
-    });
-  }
-
-  QueryBuilder<UserProfile, UserProfile, QAfterSortBy> thenByHashCodeDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'hashCode', Sort.desc);
     });
   }
 
@@ -1312,12 +1227,6 @@ extension UserProfileQueryWhereDistinct
     });
   }
 
-  QueryBuilder<UserProfile, UserProfile, QDistinct> distinctByHashCode() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'hashCode');
-    });
-  }
-
   QueryBuilder<UserProfile, UserProfile, QDistinct> distinctByHighRiskApps() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'highRiskApps');
@@ -1370,12 +1279,6 @@ extension UserProfileQueryProperty
     });
   }
 
-  QueryBuilder<UserProfile, int, QQueryOperations> hashCodeProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'hashCode');
-    });
-  }
-
   QueryBuilder<UserProfile, List<String>, QQueryOperations>
       highRiskAppsProperty() {
     return QueryBuilder.apply(this, (query) {
@@ -1409,36 +1312,3 @@ extension UserProfileQueryProperty
     });
   }
 }
-
-// **************************************************************************
-// JsonSerializableGenerator
-// **************************************************************************
-
-_UserProfile _$UserProfileFromJson(Map<String, dynamic> json) => _UserProfile(
-      id: (json['id'] as num?)?.toInt(),
-      totalXp: (json['totalXp'] as num).toInt(),
-      currentLevel: (json['currentLevel'] as num).toInt(),
-      currentStreak: (json['currentStreak'] as num).toInt(),
-      longestStreak: (json['longestStreak'] as num).toInt(),
-      lastActiveDate: json['lastActiveDate'] == null
-          ? null
-          : DateTime.parse(json['lastActiveDate'] as String),
-      unlockedBadgeIds: (json['unlockedBadgeIds'] as List<dynamic>)
-          .map((e) => e as String)
-          .toList(),
-      highRiskApps: (json['highRiskApps'] as List<dynamic>)
-          .map((e) => e as String)
-          .toList(),
-    );
-
-Map<String, dynamic> _$UserProfileToJson(_UserProfile instance) =>
-    <String, dynamic>{
-      'id': instance.id,
-      'totalXp': instance.totalXp,
-      'currentLevel': instance.currentLevel,
-      'currentStreak': instance.currentStreak,
-      'longestStreak': instance.longestStreak,
-      'lastActiveDate': instance.lastActiveDate?.toIso8601String(),
-      'unlockedBadgeIds': instance.unlockedBadgeIds,
-      'highRiskApps': instance.highRiskApps,
-    };

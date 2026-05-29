@@ -32,7 +32,7 @@ class OnboardingScreen extends ConsumerWidget {
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.doomRedLight.withOpacity(0.3),
+                      color: AppColors.doomRedLight.withValues(alpha: 0.3),
                       blurRadius: 20,
                       offset: const Offset(0, 10),
                     )

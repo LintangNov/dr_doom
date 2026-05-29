@@ -45,6 +45,7 @@ dependencies:
   json_annotation: ^4.9.0
   get_it: ^9.2.1
   injectable: ^2.7.1+4
+  sensors_plus: ^7.0.0
 
 dev_dependencies:
   flutter_test:

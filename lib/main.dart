@@ -1,12 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:isar_community/isar.dart';
+import 'package:path_provider/path_provider.dart';
 import 'core/constants/app_colors.dart';
+import 'data/models/user_profile.dart';
+import 'data/models/scroll_session.dart';
+import 'providers/database_provider.dart';
 import 'router/app_router.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Get application documents directory
+  final dir = await getApplicationDocumentsDirectory();
+
+  // Open Isar database with collections schemas
+  final isar = await Isar.open(
+    [UserProfileSchema, ScrollSessionSchema],
+    directory: dir.path,
+  );
+
   runApp(
-    const ProviderScope(
-      child: MyApp(),
+    ProviderScope(
+      overrides: [
+        isarProvider.overrideWithValue(isar),
+      ],
+      child: const MyApp(),
     ),
   );
 }

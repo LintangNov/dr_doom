@@ -46,16 +46,16 @@ void main() {
       expect(delta, equals(100));
     });
 
-    test('Should calculate standard penalties (skip + peak DRS)', () {
+    test('Skipping cognitive bump or high DRS should yield 0 XP delta (no penalties)', () {
       final delta = xpCalculator.calculateDelta(
         completedCognitiveBump: false,
         sessionMinutes: 40.0,
         currentStreak: 0,
-        skippedCognitiveBump: true,  // -20
-        peakDrs: 95.0,               // >= 90 (-50)
+        skippedCognitiveBump: true,
+        peakDrs: 95.0,
       );
 
-      expect(delta, equals(-70));
+      expect(delta, equals(0));
     });
 
     test('Should apply XP delta and evaluate Duolingo leveling correctly', () {
@@ -95,7 +95,7 @@ void main() {
       );
     });
 
-    test('Streak should reset to 0 if Peak DRS > 70 without completing bump', () {
+    test('Streak should NOT reset to 0 even if Peak DRS > 70 without completing bump', () {
       final today = DateTime(2026, 5, 29);
       streakManager.evaluateStreak(
         profile,
@@ -104,7 +104,7 @@ void main() {
         completedCognitiveBump: false,    // didn't complete
       );
 
-      expect(profile.currentStreak, equals(0));
+      expect(profile.currentStreak, equals(4)); // incremented because it is consecutive
       expect(profile.lastActiveDate, equals(today));
     });
 

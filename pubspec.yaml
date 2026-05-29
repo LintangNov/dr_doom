@@ -36,14 +36,15 @@ dependencies:
   go_router: ^17.2.3
 
   # Database
-  isar_community: ^3.3.0
-  isar_community_flutter_libs: ^3.3.0
+  # Database
+  isar_community: ^3.3.2
+  isar_community_flutter_libs: ^3.3.2
 
   # Immutable & DI
   freezed_annotation: ^3.1.0
   json_annotation: ^4.9.0
   get_it: ^9.2.1
-  injectable: ^2.4.1
+  injectable: ^2.7.1+4
 
 dev_dependencies:
   flutter_test:
@@ -51,11 +52,11 @@ dev_dependencies:
   flutter_lints: ^6.0.0
 
   # Code Generation
-  build_runner: ^2.4.10
+  build_runner: ^2.15.0
   freezed: ^3.2.3
-  json_serializable: ^6.8.0
-  isar_community_generator: ^3.3.0
-  injectable_generator: ^2.6.2
+  json_serializable: ^6.11.2
+  isar_community_generator: ^3.3.2
+  injectable_generator: ^2.9.1
   riverpod_generator: ^4.0.0+1
 
   # Riverpod Linting

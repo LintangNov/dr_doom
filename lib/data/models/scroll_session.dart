@@ -1,12 +1,12 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:isar/isar.dart';
+import 'package:isar_community/isar.dart';
 
 part 'scroll_session.freezed.dart';
 part 'scroll_session.g.dart';
 
 @freezed
 @Collection(ignore: {'copyWith'})
-class ScrollSession with _$ScrollSession {
+abstract class ScrollSession with _$ScrollSession {
   const factory ScrollSession({
     Id? id,
     required DateTime startTime,

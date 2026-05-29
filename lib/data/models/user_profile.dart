@@ -1,12 +1,12 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:isar/isar.dart';
+import 'package:isar_community/isar.dart';
 
 part 'user_profile.freezed.dart';
 part 'user_profile.g.dart';
 
 @freezed
 @Collection(ignore: {'copyWith'})
-class UserProfile with _$UserProfile {
+abstract class UserProfile with _$UserProfile {
   const factory UserProfile({
     Id? id,
     required int totalXp,

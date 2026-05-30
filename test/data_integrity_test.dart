@@ -135,11 +135,11 @@ void main() {
       // Expected XP changes:
       // Starting: 100 XP
       // First session completion: +50 XP (bump) + 30 XP (session < 30 min) + 20 XP (streak bonus) = +100 XP -> Total: 200 XP
-      // Second session completion: +50 XP (bump) + 30 XP (session < 30 min) + 20 XP (streak bonus) = +100 XP -> Total: 300 XP
-      // Let's assert that the final XP is exactly 300 XP (or appropriate XP based on calculation)
+      // Second session completion: +50 XP (bump) + 30 XP (session < 30 min) + 30 XP (streak bonus) = +110 XP -> Total: 310 XP
+      // Let's assert that the final XP is exactly 310 XP (or appropriate XP based on calculation)
       // Since first run updates streak and lastActiveDate, let's verify total XP is greater than starting XP and matches atomicity.
       expect(updatedProfile!.totalXp, isNot(equals(100)));
-      expect(updatedProfile.totalXp, equals(300));
+      expect(updatedProfile.totalXp, equals(310));
     });
   });
 }

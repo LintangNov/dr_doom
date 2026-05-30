@@ -14,6 +14,10 @@ class ScrollSession {
   int swipeCount;
   int tapCount;
 
+  // Keamanan & Evasion Checking
+  bool completedCognitiveBump;
+  bool isEvaded;
+
   ScrollSession({
     this.id,
     required this.startTime,
@@ -23,6 +27,8 @@ class ScrollSession {
     required this.avgDrs,
     required this.swipeCount,
     required this.tapCount,
+    this.completedCognitiveBump = false,
+    this.isEvaded = false,
   });
 
   factory ScrollSession.fromJson(Map<String, dynamic> json) {
@@ -35,6 +41,8 @@ class ScrollSession {
       avgDrs: (json['avgDrs'] as num).toDouble(),
       swipeCount: json['swipeCount'] as int,
       tapCount: json['tapCount'] as int,
+      completedCognitiveBump: json['completedCognitiveBump'] as bool? ?? false,
+      isEvaded: json['isEvaded'] as bool? ?? false,
     );
   }
 
@@ -48,6 +56,8 @@ class ScrollSession {
       'avgDrs': avgDrs,
       'swipeCount': swipeCount,
       'tapCount': tapCount,
+      'completedCognitiveBump': completedCognitiveBump,
+      'isEvaded': isEvaded,
     };
   }
 }

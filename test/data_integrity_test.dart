@@ -60,6 +60,11 @@ class FakeIsar extends Fake implements Isar {
     // In our test, writeTxn executes callback directly
     return await callback();
   }
+
+  @override
+  T writeTxnSync<T>(T Function() callback, {bool silent = false}) {
+    return callback();
+  }
 }
 
 void main() {
@@ -110,6 +115,10 @@ void main() {
         completedCognitiveBump: false,
         isEvaded: false,
       );
+
+      // Warm up the cached session in-memory by updating DRS
+      engine.updateDrs(80.0);
+      await Future.delayed(const Duration(milliseconds: 100));
 
       // 3. Trigger multiple completed sessions concurrently to simulate race conditions
       // In real scenarios, concurrent clicks or events might fire overlapping completes.

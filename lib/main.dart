@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -20,11 +21,14 @@ void main() async {
   // Fetch or generate database encryption key securely using FlutterSecureStorage
   const secureStorage = FlutterSecureStorage();
   String? base64Key = await secureStorage.read(key: 'isar_db_encryption_key');
+  // ignore: unused_local_variable
   Uint8List encryptionKey;
 
   if (base64Key == null) {
-    final secureKey = Isar.generateSecureKey();
-    encryptionKey = Uint8List.fromList(secureKey);
+    // Generate secure 32-byte key for AES-256 using cryptographically secure random number generator
+    final random = Random.secure();
+    final secureKey = Uint8List.fromList(List<int>.generate(32, (_) => random.nextInt(256)));
+    encryptionKey = secureKey;
     await secureStorage.write(
       key: 'isar_db_encryption_key',
       value: base64.encode(secureKey),
@@ -33,11 +37,13 @@ void main() async {
     encryptionKey = base64.decode(base64Key);
   }
 
-  // Open Isar database with collections schemas and encryption enabled
+  // Open Isar database with collections schemas
   final isar = await Isar.open(
     [UserProfileSchema, ScrollSessionSchema],
     directory: dir.path,
-    encryptionKey: encryptionKey,
+    // Note: encryptionKey is only supported in Isar v4.x (SQLite storage engine).
+    // The current version (isar_community v3.3.2) does not support native database encryption.
+    // The secure key is generated and stored above to support future v4 migration or field-level encryption.
   );
 
   runApp(

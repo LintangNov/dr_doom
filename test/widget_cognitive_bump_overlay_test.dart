@@ -4,6 +4,12 @@ import 'package:dr_doom/presentation/widgets/cognitive_bump_overlay.dart';
 
 void main() {
   testWidgets('CognitiveBumpOverlay renders math equation and handles submit', (WidgetTester tester) async {
+    // Set larger screen size to ensure all widgets are fully visible and hittestable
+    tester.view.physicalSize = const Size(800, 1000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
     bool dismissed = false;
 
     await tester.pumpWidget(
@@ -26,6 +32,7 @@ void main() {
 
     // Verify answer input logic (enter wrong answer first)
     await tester.enterText(find.byType(TextField), '999');
+    await tester.ensureVisible(find.text('Konfirmasi'));
     await tester.tap(find.text('Konfirmasi'));
     await tester.pump();
 

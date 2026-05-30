@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:isar_community/isar.dart';
 import 'package:dr_doom/data/models/user_profile.dart';
+import 'package:dr_doom/data/models/scroll_session.dart';
 import 'package:dr_doom/providers/database_provider.dart';
 import 'package:dr_doom/providers/intervention_provider.dart';
 
@@ -54,17 +55,48 @@ class FakeUserProfileCollection extends Fake implements IsarCollection<UserProfi
   }
 }
 
+class FakeScrollSessionCollection extends Fake implements IsarCollection<ScrollSession> {
+  final List<ScrollSession> sessions = [];
+
+  @override
+  Future<ScrollSession?> get(Id id) async {
+    return sessions.isNotEmpty ? sessions.first : null;
+  }
+
+  @override
+  Future<Id> put(ScrollSession object) async {
+    object.id ??= 1;
+    if (!sessions.contains(object)) {
+      sessions.add(object);
+    }
+    return object.id!;
+  }
+
+  @override
+  Id putSync(ScrollSession object, {bool saveLinks = true}) {
+    object.id ??= 1;
+    if (!sessions.contains(object)) {
+      sessions.add(object);
+    }
+    return object.id!;
+  }
+}
+
 /// A Fake implementation of [Isar] database bypasses the FFI compiled library load
 /// allowing integration tests to run effortlessly in unit test CLI environments.
 class FakeIsar extends Fake implements Isar {
   final FakeUserProfileCollection _userProfiles = FakeUserProfileCollection();
+  final FakeScrollSessionCollection _scrollSessions = FakeScrollSessionCollection();
 
   @override
   IsarCollection<T> collection<T>() {
     if (T == UserProfile) {
       return _userProfiles as IsarCollection<T>;
     }
-    throw UnimplementedError('FakeIsar only supports UserProfile collection in this integration test.');
+    if (T == ScrollSession) {
+      return _scrollSessions as IsarCollection<T>;
+    }
+    throw UnimplementedError('FakeIsar only supports UserProfile and ScrollSession collections in this integration test.');
   }
 
   @override
@@ -134,6 +166,18 @@ void main() {
 
       // 5. Trigger an elevated DRS value of > 70 (e.g. 75.0) in the Intervention Engine
       final engine = container.read(interventionProvider.notifier);
+      engine.mockLatestSessionForTest = ScrollSession(
+        id: 1,
+        startTime: DateTime.now().subtract(const Duration(minutes: 10)),
+        endTime: DateTime.now().subtract(const Duration(minutes: 2)),
+        appPackageName: 'com.example.doomapp',
+        peakDrs: 50.0,
+        avgDrs: 45.0,
+        swipeCount: 5,
+        tapCount: 1,
+        completedCognitiveBump: false,
+        isEvaded: false,
+      );
       engine.updateDrs(75.0);
 
       // 6. Verify that the Intervention Engine evaluates the state to Risiko Tinggi

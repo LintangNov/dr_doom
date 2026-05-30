@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:isar_community/isar.dart';
 import '../data/models/scroll_session.dart';
@@ -7,6 +8,7 @@ import '../domain/services/system_clock_service.dart';
 import '../domain/usecases/xp_calculator.dart';
 import '../domain/usecases/streak_manager.dart';
 import '../domain/usecases/achievement_checker.dart';
+import '../providers/background_risk_calculator.dart';
 import 'database_provider.dart';
 
 enum InterventionLevel {
@@ -41,14 +43,38 @@ class InterventionState {
   }
 }
 
-class InterventionEngine extends Notifier<InterventionState> {
+class InterventionEngine extends Notifier<InterventionState> with WidgetsBindingObserver {
   StreamSubscription<double>? _drsSubscription;
+  Timer? _cachingTimer;
+  ScrollSession? _cachedSession;
+  bool _isSessionDirty = false;
+
+  // Properti unit testing untuk memintas Isar query FFI di lingkungan unit test
+  ScrollSession? mockLatestSessionForTest;
+
+  Isar? _isarInstance;
+  Isar get _isar => (_isarInstance ??= ref.read(isarProvider))!;
 
   @override
   InterventionState build() {
+    // Warm up the long-lived background isolate defensively
+    unawaited(BackgroundRiskCalculator.init());
+
+    // Register WidgetsBindingObserver to catch background transitions
+    WidgetsBinding.instance.addObserver(this);
+
+    // Setup periodic caching timer (flush to disk every 30 seconds)
+    _cachingTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+      unawaited(_flushSessionToDisk());
+    });
+
     // Automatically cleans up the subscription when the provider is disposed
     ref.onDispose(() {
+      WidgetsBinding.instance.removeObserver(this);
       _drsSubscription?.cancel();
+      _cachingTimer?.cancel();
+      BackgroundRiskCalculator.dispose();
+      unawaited(_flushSessionToDisk(isSyncFlush: true)); // flush outstanding updates synchronously
     });
 
     return const InterventionState(
@@ -56,6 +82,14 @@ class InterventionEngine extends Notifier<InterventionState> {
       currentDrs: 0.0,
       grayscaleIntensity: 0.0,
     );
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused || state == AppLifecycleState.detached) {
+      // Immediate flush when backgrounded or detached to prevent data loss
+      unawaited(_flushSessionToDisk());
+    }
   }
 
   /// Subscribes to a stream of DRS values.
@@ -104,7 +138,7 @@ class InterventionEngine extends Notifier<InterventionState> {
     );
 
     try {
-      final isar = ref.read(isarProvider);
+      final isar = _isar;
       unawaited(_finalizeActiveSessionOnSensorDeath(isar));
     } catch (_) {
       // Safe guard during tests where Isar is not overridden
@@ -112,6 +146,15 @@ class InterventionEngine extends Notifier<InterventionState> {
   }
 
   Future<void> _finalizeActiveSessionOnSensorDeath(Isar isar) async {
+    // If we have a cached session, finalize it and mark as clean
+    if (_cachedSession != null) {
+      _cachedSession!.endTime = DateTime.now();
+      _cachedSession!.isEvaded = false;
+      _isSessionDirty = true;
+      await _flushSessionToDisk();
+      return;
+    }
+
     final latestSession = await isar.scrollSessions
         .where()
         .sortByStartTimeDesc()
@@ -126,55 +169,91 @@ class InterventionEngine extends Notifier<InterventionState> {
     }
   }
 
-  /// Dynamically starts a new scroll session or updates the active one in the Isar database.
+  /// Dynamically updates the current scroll session in-memory to prevent disk wear.
   Future<void> startOrUpdateSession(double drs) async {
     try {
-      final isar = ref.read(isarProvider);
-      
-      final latestSession = await isar.scrollSessions
-          .where()
-          .sortByStartTimeDesc()
-          .findFirst();
-
+      final isar = _isar;
       final now = DateTime.now();
-      bool shouldCreateNew = false;
 
-      if (latestSession == null) {
-        shouldCreateNew = true;
-      } else {
-        final timeSinceEnd = now.difference(latestSession.endTime).inMinutes;
-        if (timeSinceEnd > 5 || latestSession.completedCognitiveBump || latestSession.isEvaded) {
+      // 1. If we don't have a cached session, try to load the latest or create one
+      if (_cachedSession == null) {
+        ScrollSession? latestSession;
+        if (mockLatestSessionForTest != null) {
+          latestSession = mockLatestSessionForTest;
+        } else {
+          latestSession = await isar.scrollSessions
+              .where()
+              .sortByStartTimeDesc()
+              .findFirst();
+        }
+
+        bool shouldCreateNew = false;
+        if (latestSession == null) {
           shouldCreateNew = true;
+        } else {
+          final timeSinceEnd = now.difference(latestSession.endTime).inMinutes;
+          if (timeSinceEnd > 5 || latestSession.completedCognitiveBump || latestSession.isEvaded) {
+            shouldCreateNew = true;
+          }
+        }
+
+        if (shouldCreateNew) {
+          _cachedSession = ScrollSession(
+            startTime: now,
+            endTime: now,
+            appPackageName: 'com.example.doomapp', // General app placeholder
+            peakDrs: drs,
+            avgDrs: drs,
+            swipeCount: 0,
+            tapCount: 0,
+            completedCognitiveBump: false,
+            isEvaded: false,
+          );
+          
+          // Write immediately on creation to generate database ID!
+          await isar.writeTxn(() async {
+            await isar.scrollSessions.put(_cachedSession!);
+          });
+        } else {
+          _cachedSession = latestSession;
         }
       }
 
-      if (shouldCreateNew) {
-        final newSession = ScrollSession(
-          startTime: now,
-          endTime: now,
-          appPackageName: 'com.example.doomapp', // General app placeholder
-          peakDrs: drs,
-          avgDrs: drs,
-          swipeCount: 0,
-          tapCount: 0,
-          completedCognitiveBump: false,
-          isEvaded: false,
-        );
-        await isar.writeTxn(() async {
-          await isar.scrollSessions.put(newSession);
+      // 2. Update the session properties in-memory
+      if (_cachedSession != null) {
+        _cachedSession!.endTime = now;
+        if (drs > _cachedSession!.peakDrs) {
+          _cachedSession!.peakDrs = drs;
+        }
+        _cachedSession!.avgDrs = (_cachedSession!.avgDrs + drs) / 2.0;
+        _isSessionDirty = true; // Mark as dirty (needs disk sync)
+      }
+    } catch (e, stack) {
+      print('DR_DOOM_ERROR in startOrUpdateSession: $e\n$stack');
+    }
+  }
+
+  /// Persists any pending in-memory session changes to physical Isar database.
+  Future<void> _flushSessionToDisk({bool isSyncFlush = false}) async {
+    if (!_isSessionDirty || _cachedSession == null) return;
+
+    try {
+      final isar = _isar;
+      
+      if (isSyncFlush) {
+        isar.writeTxnSync(() {
+          isar.scrollSessions.putSync(_cachedSession!);
         });
-      } else if (latestSession != null) {
+      } else {
         await isar.writeTxn(() async {
-          latestSession.endTime = now;
-          if (drs > latestSession.peakDrs) {
-            latestSession.peakDrs = drs;
-          }
-          latestSession.avgDrs = (latestSession.avgDrs + drs) / 2.0;
-          await isar.scrollSessions.put(latestSession);
+          await isar.scrollSessions.put(_cachedSession!);
         });
       }
-    } catch (e) {
-      // Safe guard
+      
+      _isSessionDirty = false;
+      print('DR_DOOM_PERFORMANCE: Successfully flushed in-memory scroll session to Isar physical DB (Disk write minimized).');
+    } catch (e, stack) {
+      print('DR_DOOM_ERROR in _flushSessionToDisk: $e\n$stack');
     }
   }
 
@@ -182,20 +261,35 @@ class InterventionEngine extends Notifier<InterventionState> {
   /// Performs anti-cheat time check, calculates XP gains, evaluates streaks and badge achievements.
   Future<void> completeActiveSession() async {
     try {
-      final isar = ref.read(isarProvider);
+      final isar = _isar;
       
-      final latestSession = await isar.scrollSessions
+      if (_cachedSession != null) {
+        _cachedSession!.completedCognitiveBump = true;
+        _cachedSession!.endTime = DateTime.now();
+        _isSessionDirty = true;
+        await _flushSessionToDisk();
+      } else {
+        final latestSession = await isar.scrollSessions
+            .where()
+            .sortByStartTimeDesc()
+            .findFirst();
+
+        if (latestSession != null && !latestSession.completedCognitiveBump) {
+          await isar.writeTxn(() async {
+            latestSession.completedCognitiveBump = true;
+            latestSession.endTime = DateTime.now();
+            await isar.scrollSessions.put(latestSession);
+          });
+        }
+      }
+
+      // Re-read to guarantee we have the final values
+      final latestSession = _cachedSession ?? await isar.scrollSessions
           .where()
           .sortByStartTimeDesc()
           .findFirst();
 
-      if (latestSession != null && !latestSession.completedCognitiveBump) {
-        await isar.writeTxn(() async {
-          latestSession.completedCognitiveBump = true;
-          latestSession.endTime = DateTime.now();
-          await isar.scrollSessions.put(latestSession);
-        });
-
+      if (latestSession != null) {
         // Fetch UserProfile and update XP/Streak/Achievements
         final profile = await isar.userProfiles.get(1);
         if (profile != null) {

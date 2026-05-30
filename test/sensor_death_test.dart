@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dr_doom/providers/intervention_provider.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
   group('Sensor Death & Timeout Degradation Tests', () {
     late ProviderContainer container;
 

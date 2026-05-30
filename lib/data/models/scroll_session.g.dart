@@ -27,28 +27,38 @@ const ScrollSessionSchema = CollectionSchema(
       name: r'avgDrs',
       type: IsarType.double,
     ),
-    r'endTime': PropertySchema(
+    r'completedCognitiveBump': PropertySchema(
       id: 2,
+      name: r'completedCognitiveBump',
+      type: IsarType.bool,
+    ),
+    r'endTime': PropertySchema(
+      id: 3,
       name: r'endTime',
       type: IsarType.dateTime,
     ),
+    r'isEvaded': PropertySchema(
+      id: 4,
+      name: r'isEvaded',
+      type: IsarType.bool,
+    ),
     r'peakDrs': PropertySchema(
-      id: 3,
+      id: 5,
       name: r'peakDrs',
       type: IsarType.double,
     ),
     r'startTime': PropertySchema(
-      id: 4,
+      id: 6,
       name: r'startTime',
       type: IsarType.dateTime,
     ),
     r'swipeCount': PropertySchema(
-      id: 5,
+      id: 7,
       name: r'swipeCount',
       type: IsarType.long,
     ),
     r'tapCount': PropertySchema(
-      id: 6,
+      id: 8,
       name: r'tapCount',
       type: IsarType.long,
     )
@@ -85,11 +95,13 @@ void _scrollSessionSerialize(
 ) {
   writer.writeString(offsets[0], object.appPackageName);
   writer.writeDouble(offsets[1], object.avgDrs);
-  writer.writeDateTime(offsets[2], object.endTime);
-  writer.writeDouble(offsets[3], object.peakDrs);
-  writer.writeDateTime(offsets[4], object.startTime);
-  writer.writeLong(offsets[5], object.swipeCount);
-  writer.writeLong(offsets[6], object.tapCount);
+  writer.writeBool(offsets[2], object.completedCognitiveBump);
+  writer.writeDateTime(offsets[3], object.endTime);
+  writer.writeBool(offsets[4], object.isEvaded);
+  writer.writeDouble(offsets[5], object.peakDrs);
+  writer.writeDateTime(offsets[6], object.startTime);
+  writer.writeLong(offsets[7], object.swipeCount);
+  writer.writeLong(offsets[8], object.tapCount);
 }
 
 ScrollSession _scrollSessionDeserialize(
@@ -101,12 +113,14 @@ ScrollSession _scrollSessionDeserialize(
   final object = ScrollSession(
     appPackageName: reader.readString(offsets[0]),
     avgDrs: reader.readDouble(offsets[1]),
-    endTime: reader.readDateTime(offsets[2]),
+    completedCognitiveBump: reader.readBoolOrNull(offsets[2]) ?? false,
+    endTime: reader.readDateTime(offsets[3]),
     id: id,
-    peakDrs: reader.readDouble(offsets[3]),
-    startTime: reader.readDateTime(offsets[4]),
-    swipeCount: reader.readLong(offsets[5]),
-    tapCount: reader.readLong(offsets[6]),
+    isEvaded: reader.readBoolOrNull(offsets[4]) ?? false,
+    peakDrs: reader.readDouble(offsets[5]),
+    startTime: reader.readDateTime(offsets[6]),
+    swipeCount: reader.readLong(offsets[7]),
+    tapCount: reader.readLong(offsets[8]),
   );
   return object;
 }
@@ -123,14 +137,18 @@ P _scrollSessionDeserializeProp<P>(
     case 1:
       return (reader.readDouble(offset)) as P;
     case 2:
-      return (reader.readDateTime(offset)) as P;
+      return (reader.readBoolOrNull(offset) ?? false) as P;
     case 3:
-      return (reader.readDouble(offset)) as P;
-    case 4:
       return (reader.readDateTime(offset)) as P;
+    case 4:
+      return (reader.readBoolOrNull(offset) ?? false) as P;
     case 5:
-      return (reader.readLong(offset)) as P;
+      return (reader.readDouble(offset)) as P;
     case 6:
+      return (reader.readDateTime(offset)) as P;
+    case 7:
+      return (reader.readLong(offset)) as P;
+    case 8:
       return (reader.readLong(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -436,6 +454,16 @@ extension ScrollSessionQueryFilter
   }
 
   QueryBuilder<ScrollSession, ScrollSession, QAfterFilterCondition>
+      completedCognitiveBumpEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'completedCognitiveBump',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<ScrollSession, ScrollSession, QAfterFilterCondition>
       endTimeEqualTo(DateTime value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
@@ -558,6 +586,16 @@ extension ScrollSessionQueryFilter
         includeLower: includeLower,
         upper: upper,
         includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<ScrollSession, ScrollSession, QAfterFilterCondition>
+      isEvadedEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'isEvaded',
+        value: value,
       ));
     });
   }
@@ -831,6 +869,20 @@ extension ScrollSessionQuerySortBy
     });
   }
 
+  QueryBuilder<ScrollSession, ScrollSession, QAfterSortBy>
+      sortByCompletedCognitiveBump() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'completedCognitiveBump', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ScrollSession, ScrollSession, QAfterSortBy>
+      sortByCompletedCognitiveBumpDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'completedCognitiveBump', Sort.desc);
+    });
+  }
+
   QueryBuilder<ScrollSession, ScrollSession, QAfterSortBy> sortByEndTime() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'endTime', Sort.asc);
@@ -840,6 +892,19 @@ extension ScrollSessionQuerySortBy
   QueryBuilder<ScrollSession, ScrollSession, QAfterSortBy> sortByEndTimeDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'endTime', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ScrollSession, ScrollSession, QAfterSortBy> sortByIsEvaded() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isEvaded', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ScrollSession, ScrollSession, QAfterSortBy>
+      sortByIsEvadedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isEvaded', Sort.desc);
     });
   }
 
@@ -923,6 +988,20 @@ extension ScrollSessionQuerySortThenBy
     });
   }
 
+  QueryBuilder<ScrollSession, ScrollSession, QAfterSortBy>
+      thenByCompletedCognitiveBump() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'completedCognitiveBump', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ScrollSession, ScrollSession, QAfterSortBy>
+      thenByCompletedCognitiveBumpDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'completedCognitiveBump', Sort.desc);
+    });
+  }
+
   QueryBuilder<ScrollSession, ScrollSession, QAfterSortBy> thenByEndTime() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'endTime', Sort.asc);
@@ -944,6 +1023,19 @@ extension ScrollSessionQuerySortThenBy
   QueryBuilder<ScrollSession, ScrollSession, QAfterSortBy> thenByIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ScrollSession, ScrollSession, QAfterSortBy> thenByIsEvaded() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isEvaded', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ScrollSession, ScrollSession, QAfterSortBy>
+      thenByIsEvadedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isEvaded', Sort.desc);
     });
   }
 
@@ -1015,9 +1107,22 @@ extension ScrollSessionQueryWhereDistinct
     });
   }
 
+  QueryBuilder<ScrollSession, ScrollSession, QDistinct>
+      distinctByCompletedCognitiveBump() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'completedCognitiveBump');
+    });
+  }
+
   QueryBuilder<ScrollSession, ScrollSession, QDistinct> distinctByEndTime() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'endTime');
+    });
+  }
+
+  QueryBuilder<ScrollSession, ScrollSession, QDistinct> distinctByIsEvaded() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'isEvaded');
     });
   }
 
@@ -1067,9 +1172,22 @@ extension ScrollSessionQueryProperty
     });
   }
 
+  QueryBuilder<ScrollSession, bool, QQueryOperations>
+      completedCognitiveBumpProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'completedCognitiveBump');
+    });
+  }
+
   QueryBuilder<ScrollSession, DateTime, QQueryOperations> endTimeProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'endTime');
+    });
+  }
+
+  QueryBuilder<ScrollSession, bool, QQueryOperations> isEvadedProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'isEvaded');
     });
   }
 

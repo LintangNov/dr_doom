@@ -13,7 +13,11 @@ class StreakManager {
     required double dailyPeakDrs,
     required bool completedCognitiveBump,
   }) {
-    // NO DRS-BASED RESET: Streak is preserved daily and only resets on true calendar-based inactivity (> 1 day).
+    // Keamanan: Jika terdeteksi adanya manipulasi waktu harian, batalkan dan reset streak menjadi 0
+    if (profile.isTimeManipulated) {
+      profile.currentStreak = 0;
+      return profile;
+    }
 
     final lastActive = profile.lastActiveDate;
     if (lastActive == null) {

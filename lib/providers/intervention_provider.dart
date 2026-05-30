@@ -1,5 +1,13 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:isar_community/isar.dart';
+import '../data/models/scroll_session.dart';
+import '../data/models/user_profile.dart';
+import '../domain/services/system_clock_service.dart';
+import '../domain/usecases/xp_calculator.dart';
+import '../domain/usecases/streak_manager.dart';
+import '../domain/usecases/achievement_checker.dart';
+import 'database_provider.dart';
 
 enum InterventionLevel {
   normal,       // DRS 0 - 29
@@ -52,9 +60,22 @@ class InterventionEngine extends Notifier<InterventionState> {
 
   /// Subscribes to a stream of DRS values.
   /// Automatically cleans up any active subscriptions to prevent memory leaks.
+  /// Integrates timeout and error handling to handle sensor death / Doze Mode gracefully.
   void listenToDrsStream(Stream<double> drsStream) {
     _drsSubscription?.cancel();
-    _drsSubscription = drsStream.listen(updateDrs);
+    _drsSubscription = drsStream
+        .timeout(
+          const Duration(seconds: 15),
+          onTimeout: (sink) {
+            sink.addError(TimeoutException('Sensor data stream timed out (15s inactive). OS kill or Doze Mode suspected.'));
+          },
+        )
+        .listen(
+          updateDrs,
+          onError: (error) {
+            handleSensorDeathOrTimeout(error);
+          },
+        );
   }
 
   /// Manually updates the current DRS value and evaluates the intervention state.
@@ -68,6 +89,158 @@ class InterventionEngine extends Notifier<InterventionState> {
       currentDrs: clampedDrs,
       grayscaleIntensity: newGrayscaleIntensity,
     );
+
+    // Persist or update the session in the background
+    unawaited(startOrUpdateSession(clampedDrs));
+  }
+
+  /// Gracefully degrades the intervention state to normal to prevent locking user out
+  /// when the operating system kills sensors or activates battery saver.
+  void handleSensorDeathOrTimeout(dynamic error) {
+    state = state.copyWith(
+      level: InterventionLevel.normal,
+      currentDrs: 0.0,
+      grayscaleIntensity: 0.0,
+    );
+
+    try {
+      final isar = ref.read(isarProvider);
+      unawaited(_finalizeActiveSessionOnSensorDeath(isar));
+    } catch (_) {
+      // Safe guard during tests where Isar is not overridden
+    }
+  }
+
+  Future<void> _finalizeActiveSessionOnSensorDeath(Isar isar) async {
+    final latestSession = await isar.scrollSessions
+        .where()
+        .sortByStartTimeDesc()
+        .findFirst();
+
+    if (latestSession != null && latestSession.endTime.millisecondsSinceEpoch == latestSession.startTime.millisecondsSinceEpoch) {
+      await isar.writeTxn(() async {
+        latestSession.endTime = DateTime.now();
+        latestSession.isEvaded = false; // Interrupted by OS, not user evasion
+        await isar.scrollSessions.put(latestSession);
+      });
+    }
+  }
+
+  /// Dynamically starts a new scroll session or updates the active one in the Isar database.
+  Future<void> startOrUpdateSession(double drs) async {
+    try {
+      final isar = ref.read(isarProvider);
+      
+      final latestSession = await isar.scrollSessions
+          .where()
+          .sortByStartTimeDesc()
+          .findFirst();
+
+      final now = DateTime.now();
+      bool shouldCreateNew = false;
+
+      if (latestSession == null) {
+        shouldCreateNew = true;
+      } else {
+        final timeSinceEnd = now.difference(latestSession.endTime).inMinutes;
+        if (timeSinceEnd > 5 || latestSession.completedCognitiveBump || latestSession.isEvaded) {
+          shouldCreateNew = true;
+        }
+      }
+
+      if (shouldCreateNew) {
+        final newSession = ScrollSession(
+          startTime: now,
+          endTime: now,
+          appPackageName: 'com.example.doomapp', // General app placeholder
+          peakDrs: drs,
+          avgDrs: drs,
+          swipeCount: 0,
+          tapCount: 0,
+          completedCognitiveBump: false,
+          isEvaded: false,
+        );
+        await isar.writeTxn(() async {
+          await isar.scrollSessions.put(newSession);
+        });
+      } else if (latestSession != null) {
+        await isar.writeTxn(() async {
+          latestSession.endTime = now;
+          if (drs > latestSession.peakDrs) {
+            latestSession.peakDrs = drs;
+          }
+          latestSession.avgDrs = (latestSession.avgDrs + drs) / 2.0;
+          await isar.scrollSessions.put(latestSession);
+        });
+      }
+    } catch (e) {
+      // Safe guard
+    }
+  }
+
+  /// Marks the current active scroll session as successfully completed (solved the cognitive bump).
+  /// Performs anti-cheat time check, calculates XP gains, evaluates streaks and badge achievements.
+  Future<void> completeActiveSession() async {
+    try {
+      final isar = ref.read(isarProvider);
+      
+      final latestSession = await isar.scrollSessions
+          .where()
+          .sortByStartTimeDesc()
+          .findFirst();
+
+      if (latestSession != null && !latestSession.completedCognitiveBump) {
+        await isar.writeTxn(() async {
+          latestSession.completedCognitiveBump = true;
+          latestSession.endTime = DateTime.now();
+          await isar.scrollSessions.put(latestSession);
+        });
+
+        // Fetch UserProfile and update XP/Streak/Achievements
+        final profile = await isar.userProfiles.get(1);
+        if (profile != null) {
+          // 1. Keamanan: Pengecekan manipulasi waktu sistem menggunakan monotonic clock native
+          final clockService = const SystemClockService();
+          await clockService.checkAndDetectTimeManipulation(profile, DateTime.now());
+
+          // 2. Evaluasi penambahan XP
+          const xpCalculator = XPCalculator();
+          final delta = xpCalculator.calculateDelta(
+            completedCognitiveBump: true,
+            sessionMinutes: latestSession.endTime.difference(latestSession.startTime).inSeconds / 60.0,
+            currentStreak: profile.currentStreak,
+            skippedCognitiveBump: false,
+            peakDrs: latestSession.peakDrs,
+          );
+
+          xpCalculator.applyXpChange(profile, delta);
+
+          // 3. Evaluasi Streak Harian
+          const streakManager = StreakManager();
+          streakManager.evaluateStreak(
+            profile,
+            DateTime.now(),
+            dailyPeakDrs: latestSession.peakDrs,
+            completedCognitiveBump: true,
+          );
+
+          // 4. Evaluasi Pencapaian & Badge
+          const checker = AchievementChecker();
+          checker.checkNewBadges(
+            profile,
+            totalCognitiveBumpsCompleted: 1,
+            initialDrs: latestSession.peakDrs,
+            finalDrs: 0.0,
+          );
+
+          await isar.writeTxn(() async {
+            await isar.userProfiles.put(profile);
+          });
+        }
+      }
+    } catch (e) {
+      // Safe guard
+    }
   }
 
   InterventionLevel _evaluateInterventionLevel(double drs) {

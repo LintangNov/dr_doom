@@ -32,23 +32,43 @@ const UserProfileSchema = CollectionSchema(
       name: r'highRiskApps',
       type: IsarType.stringList,
     ),
-    r'lastActiveDate': PropertySchema(
+    r'isTimeManipulated': PropertySchema(
       id: 3,
+      name: r'isTimeManipulated',
+      type: IsarType.bool,
+    ),
+    r'lastActiveDate': PropertySchema(
+      id: 4,
       name: r'lastActiveDate',
       type: IsarType.dateTime,
     ),
+    r'lastKnownBootTime': PropertySchema(
+      id: 5,
+      name: r'lastKnownBootTime',
+      type: IsarType.long,
+    ),
+    r'lastKnownUptime': PropertySchema(
+      id: 6,
+      name: r'lastKnownUptime',
+      type: IsarType.long,
+    ),
+    r'lastSystemTime': PropertySchema(
+      id: 7,
+      name: r'lastSystemTime',
+      type: IsarType.dateTime,
+    ),
     r'longestStreak': PropertySchema(
-      id: 4,
+      id: 8,
       name: r'longestStreak',
       type: IsarType.long,
     ),
     r'totalXp': PropertySchema(
-      id: 5,
+      id: 9,
       name: r'totalXp',
       type: IsarType.long,
     ),
     r'unlockedBadgeIds': PropertySchema(
-      id: 6,
+      id: 10,
       name: r'unlockedBadgeIds',
       type: IsarType.stringList,
     )
@@ -99,10 +119,14 @@ void _userProfileSerialize(
   writer.writeLong(offsets[0], object.currentLevel);
   writer.writeLong(offsets[1], object.currentStreak);
   writer.writeStringList(offsets[2], object.highRiskApps);
-  writer.writeDateTime(offsets[3], object.lastActiveDate);
-  writer.writeLong(offsets[4], object.longestStreak);
-  writer.writeLong(offsets[5], object.totalXp);
-  writer.writeStringList(offsets[6], object.unlockedBadgeIds);
+  writer.writeBool(offsets[3], object.isTimeManipulated);
+  writer.writeDateTime(offsets[4], object.lastActiveDate);
+  writer.writeLong(offsets[5], object.lastKnownBootTime);
+  writer.writeLong(offsets[6], object.lastKnownUptime);
+  writer.writeDateTime(offsets[7], object.lastSystemTime);
+  writer.writeLong(offsets[8], object.longestStreak);
+  writer.writeLong(offsets[9], object.totalXp);
+  writer.writeStringList(offsets[10], object.unlockedBadgeIds);
 }
 
 UserProfile _userProfileDeserialize(
@@ -116,10 +140,14 @@ UserProfile _userProfileDeserialize(
     currentStreak: reader.readLong(offsets[1]),
     highRiskApps: reader.readStringList(offsets[2]) ?? [],
     id: id,
-    lastActiveDate: reader.readDateTimeOrNull(offsets[3]),
-    longestStreak: reader.readLong(offsets[4]),
-    totalXp: reader.readLong(offsets[5]),
-    unlockedBadgeIds: reader.readStringList(offsets[6]) ?? [],
+    isTimeManipulated: reader.readBoolOrNull(offsets[3]) ?? false,
+    lastActiveDate: reader.readDateTimeOrNull(offsets[4]),
+    lastKnownBootTime: reader.readLongOrNull(offsets[5]),
+    lastKnownUptime: reader.readLongOrNull(offsets[6]),
+    lastSystemTime: reader.readDateTimeOrNull(offsets[7]),
+    longestStreak: reader.readLong(offsets[8]),
+    totalXp: reader.readLong(offsets[9]),
+    unlockedBadgeIds: reader.readStringList(offsets[10]) ?? [],
   );
   return object;
 }
@@ -138,12 +166,20 @@ P _userProfileDeserializeProp<P>(
     case 2:
       return (reader.readStringList(offset) ?? []) as P;
     case 3:
-      return (reader.readDateTimeOrNull(offset)) as P;
+      return (reader.readBoolOrNull(offset) ?? false) as P;
     case 4:
-      return (reader.readLong(offset)) as P;
+      return (reader.readDateTimeOrNull(offset)) as P;
     case 5:
-      return (reader.readLong(offset)) as P;
+      return (reader.readLongOrNull(offset)) as P;
     case 6:
+      return (reader.readLongOrNull(offset)) as P;
+    case 7:
+      return (reader.readDateTimeOrNull(offset)) as P;
+    case 8:
+      return (reader.readLong(offset)) as P;
+    case 9:
+      return (reader.readLong(offset)) as P;
+    case 10:
       return (reader.readStringList(offset) ?? []) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -650,6 +686,16 @@ extension UserProfileQueryFilter
   }
 
   QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      isTimeManipulatedEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'isTimeManipulated',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
       lastActiveDateIsNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(const FilterCondition.isNull(
@@ -715,6 +761,228 @@ extension UserProfileQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
         property: r'lastActiveDate',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      lastKnownBootTimeIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'lastKnownBootTime',
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      lastKnownBootTimeIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'lastKnownBootTime',
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      lastKnownBootTimeEqualTo(int? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'lastKnownBootTime',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      lastKnownBootTimeGreaterThan(
+    int? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'lastKnownBootTime',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      lastKnownBootTimeLessThan(
+    int? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'lastKnownBootTime',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      lastKnownBootTimeBetween(
+    int? lower,
+    int? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'lastKnownBootTime',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      lastKnownUptimeIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'lastKnownUptime',
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      lastKnownUptimeIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'lastKnownUptime',
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      lastKnownUptimeEqualTo(int? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'lastKnownUptime',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      lastKnownUptimeGreaterThan(
+    int? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'lastKnownUptime',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      lastKnownUptimeLessThan(
+    int? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'lastKnownUptime',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      lastKnownUptimeBetween(
+    int? lower,
+    int? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'lastKnownUptime',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      lastSystemTimeIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'lastSystemTime',
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      lastSystemTimeIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'lastSystemTime',
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      lastSystemTimeEqualTo(DateTime? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'lastSystemTime',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      lastSystemTimeGreaterThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'lastSystemTime',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      lastSystemTimeLessThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'lastSystemTime',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      lastSystemTimeBetween(
+    DateTime? lower,
+    DateTime? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'lastSystemTime',
         lower: lower,
         includeLower: includeLower,
         upper: upper,
@@ -1095,6 +1363,20 @@ extension UserProfileQuerySortBy
     });
   }
 
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy>
+      sortByIsTimeManipulated() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isTimeManipulated', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy>
+      sortByIsTimeManipulatedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isTimeManipulated', Sort.desc);
+    });
+  }
+
   QueryBuilder<UserProfile, UserProfile, QAfterSortBy> sortByLastActiveDate() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'lastActiveDate', Sort.asc);
@@ -1105,6 +1387,46 @@ extension UserProfileQuerySortBy
       sortByLastActiveDateDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'lastActiveDate', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy>
+      sortByLastKnownBootTime() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastKnownBootTime', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy>
+      sortByLastKnownBootTimeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastKnownBootTime', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy> sortByLastKnownUptime() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastKnownUptime', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy>
+      sortByLastKnownUptimeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastKnownUptime', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy> sortByLastSystemTime() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastSystemTime', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy>
+      sortByLastSystemTimeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastSystemTime', Sort.desc);
     });
   }
 
@@ -1174,6 +1496,20 @@ extension UserProfileQuerySortThenBy
     });
   }
 
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy>
+      thenByIsTimeManipulated() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isTimeManipulated', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy>
+      thenByIsTimeManipulatedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isTimeManipulated', Sort.desc);
+    });
+  }
+
   QueryBuilder<UserProfile, UserProfile, QAfterSortBy> thenByLastActiveDate() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'lastActiveDate', Sort.asc);
@@ -1184,6 +1520,46 @@ extension UserProfileQuerySortThenBy
       thenByLastActiveDateDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'lastActiveDate', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy>
+      thenByLastKnownBootTime() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastKnownBootTime', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy>
+      thenByLastKnownBootTimeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastKnownBootTime', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy> thenByLastKnownUptime() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastKnownUptime', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy>
+      thenByLastKnownUptimeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastKnownUptime', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy> thenByLastSystemTime() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastSystemTime', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy>
+      thenByLastSystemTimeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastSystemTime', Sort.desc);
     });
   }
 
@@ -1233,9 +1609,36 @@ extension UserProfileQueryWhereDistinct
     });
   }
 
+  QueryBuilder<UserProfile, UserProfile, QDistinct>
+      distinctByIsTimeManipulated() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'isTimeManipulated');
+    });
+  }
+
   QueryBuilder<UserProfile, UserProfile, QDistinct> distinctByLastActiveDate() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'lastActiveDate');
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QDistinct>
+      distinctByLastKnownBootTime() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'lastKnownBootTime');
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QDistinct>
+      distinctByLastKnownUptime() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'lastKnownUptime');
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QDistinct> distinctByLastSystemTime() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'lastSystemTime');
     });
   }
 
@@ -1286,10 +1689,37 @@ extension UserProfileQueryProperty
     });
   }
 
+  QueryBuilder<UserProfile, bool, QQueryOperations>
+      isTimeManipulatedProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'isTimeManipulated');
+    });
+  }
+
   QueryBuilder<UserProfile, DateTime?, QQueryOperations>
       lastActiveDateProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'lastActiveDate');
+    });
+  }
+
+  QueryBuilder<UserProfile, int?, QQueryOperations>
+      lastKnownBootTimeProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'lastKnownBootTime');
+    });
+  }
+
+  QueryBuilder<UserProfile, int?, QQueryOperations> lastKnownUptimeProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'lastKnownUptime');
+    });
+  }
+
+  QueryBuilder<UserProfile, DateTime?, QQueryOperations>
+      lastSystemTimeProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'lastSystemTime');
     });
   }
 

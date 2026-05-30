@@ -5,12 +5,23 @@ import '../../domain/entities/device_posture.dart';
 import 'sensor_data_source.dart';
 
 class PowerEfficientSensorDataSource implements SensorDataSource {
+  DateTime _lastEventTime = DateTime.fromMillisecondsSinceEpoch(0);
+
   @override
   Stream<domain.AccelerometerEvent> get accelerometerEventStream {
     // Dynamically limit sampling interval using SensorInterval.normalInterval
-    // to keep CPU wake locks and battery consumption under the 3% per hour threshold.
+    // and throttle incoming events to 1.5 seconds intervals to keep CPU wake locks
+    // and battery consumption under the 3% per hour threshold.
     return sensors.accelerometerEventStream(samplingPeriod: sensors.SensorInterval.normalInterval)
-        .map((event) => domain.AccelerometerEvent(x: event.x, y: event.y, z: event.z));
+        .map((event) => domain.AccelerometerEvent(x: event.x, y: event.y, z: event.z))
+        .where((event) {
+          final now = DateTime.now();
+          if (now.difference(_lastEventTime) >= const Duration(milliseconds: 1500)) {
+            _lastEventTime = now;
+            return true;
+          }
+          return false;
+        });
   }
 
   @override

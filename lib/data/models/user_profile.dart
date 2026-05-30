@@ -14,6 +14,12 @@ class UserProfile {
   List<String> unlockedBadgeIds;
   List<String> highRiskApps;
 
+  // Keamanan & Anti-Cheat Waktu Lokal
+  int? lastKnownBootTime;
+  int? lastKnownUptime;
+  DateTime? lastSystemTime;
+  bool isTimeManipulated;
+
   UserProfile({
     this.id,
     required this.totalXp,
@@ -23,6 +29,10 @@ class UserProfile {
     this.lastActiveDate,
     required this.unlockedBadgeIds,
     required this.highRiskApps,
+    this.lastKnownBootTime,
+    this.lastKnownUptime,
+    this.lastSystemTime,
+    this.isTimeManipulated = false,
   });
 
   factory UserProfile.fromJson(Map<String, dynamic> json) {
@@ -37,6 +47,12 @@ class UserProfile {
           : null,
       unlockedBadgeIds: List<String>.from(json['unlockedBadgeIds'] as List),
       highRiskApps: List<String>.from(json['highRiskApps'] as List),
+      lastKnownBootTime: json['lastKnownBootTime'] as int?,
+      lastKnownUptime: json['lastKnownUptime'] as int?,
+      lastSystemTime: json['lastSystemTime'] != null
+          ? DateTime.parse(json['lastSystemTime'] as String)
+          : null,
+      isTimeManipulated: json['isTimeManipulated'] as bool? ?? false,
     );
   }
 
@@ -50,6 +66,10 @@ class UserProfile {
       'lastActiveDate': lastActiveDate?.toIso8601String(),
       'unlockedBadgeIds': unlockedBadgeIds,
       'highRiskApps': highRiskApps,
+      'lastKnownBootTime': lastKnownBootTime,
+      'lastKnownUptime': lastKnownUptime,
+      'lastSystemTime': lastSystemTime?.toIso8601String(),
+      'isTimeManipulated': isTimeManipulated,
     };
   }
 }

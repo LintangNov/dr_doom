@@ -34,16 +34,8 @@ class XPCalculator {
       delta += min(streakBonus, 100);
     }
 
-    // --- Penalty Rules ---
-    // 4. Lewati (skip) cognitive bump (-20 XP)
-    if (skippedCognitiveBump) {
-      delta -= 20;
-    }
-
-    // 5. DRS mencapai 90+ (-50 XP)
-    if (peakDrs >= 90.0) {
-      delta -= 50;
-    }
+    // --- REMOVED PENALTIES ---
+    // Skipping a cognitive bump or having a peak DRS >= 90 yields 0 XP addition, but never subtracts XP.
 
     return delta;
   }

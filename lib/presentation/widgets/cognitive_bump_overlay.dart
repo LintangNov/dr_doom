@@ -28,7 +28,7 @@ class _CognitiveBumpOverlayState extends State<CognitiveBumpOverlay> {
     _generateChallenge();
   }
 
-  void _generateChallenge() {
+  void _generateChallenge({bool clearError = true}) {
     final random = Random();
     // Two-digit number (15 to 89)
     _num1 = 15 + random.nextInt(75);
@@ -36,7 +36,9 @@ class _CognitiveBumpOverlayState extends State<CognitiveBumpOverlay> {
     _num2 = 3 + random.nextInt(7);
     _correctAnswer = _num1 + _num2;
     _answerController.clear();
-    _errorMessage = null;
+    if (clearError) {
+      _errorMessage = null;
+    }
   }
 
   void _handleSubmit() {
@@ -56,7 +58,7 @@ class _CognitiveBumpOverlayState extends State<CognitiveBumpOverlay> {
       setState(() {
         _errorMessage = 'Jawaban salah, coba latih fokus Anda kembali!';
         // Regenerate on failure to prevent brute forcing easily
-        _generateChallenge();
+        _generateChallenge(clearError: false);
       });
     }
   }

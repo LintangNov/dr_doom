@@ -9,7 +9,11 @@ import 'package:path_provider/path_provider.dart';
 import 'core/constants/app_colors.dart';
 import 'data/models/user_profile.dart';
 import 'data/models/scroll_session.dart';
+import 'domain/services/startup_recovery.dart';
+import 'presentation/widgets/grayscale_filter.dart';
+import 'presentation/widgets/cognitive_bump_overlay.dart';
 import 'providers/database_provider.dart';
+import 'providers/intervention_provider.dart';
 import 'router/app_router.dart';
 
 void main() async {
@@ -46,6 +50,9 @@ void main() async {
     // The secure key is generated and stored above to support future v4 migration or field-level encryption.
   );
 
+  // Run startup recovery check defensively to penalize previous evasions (force close)
+  await runStartupRecoveryCheck(isar);
+
   runApp(
     ProviderScope(
       overrides: [
@@ -62,14 +69,33 @@ class MyApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
+    final interventionState = ref.watch(interventionProvider);
 
-    return MaterialApp.router(
-      title: 'dr_doom',
-      theme: AppColors.lightTheme,
-      darkTheme: AppColors.darkTheme,
-      themeMode: ThemeMode.system,
-      routerConfig: router,
-      debugShowCheckedModeBanner: false,
+    return GrayscaleFilter(
+      child: MaterialApp.router(
+        title: 'dr_doom',
+        theme: AppColors.lightTheme,
+        darkTheme: AppColors.darkTheme,
+        themeMode: ThemeMode.system,
+        routerConfig: router,
+        debugShowCheckedModeBanner: false,
+        builder: (context, child) {
+          return Stack(
+            children: [
+              if (child != null) child,
+              // Full Screen System Overlay when in Kritis Intervention Level (DRS >= 90)
+              if (interventionState.level == InterventionLevel.kritis)
+                CognitiveBumpOverlay(
+                  onDismiss: () {
+                    // solved!
+                    ref.read(interventionProvider.notifier).updateDrs(0.0);
+                    ref.read(interventionProvider.notifier).completeActiveSession();
+                  },
+                ),
+            ],
+          );
+        },
+      ),
     );
   }
 }

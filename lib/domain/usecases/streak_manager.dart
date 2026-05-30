@@ -28,9 +28,9 @@ class StreakManager {
       return profile;
     }
 
-    // Zero-out times to compare only calendar dates (highly robust for daily streak!)
-    final dateOnlyEval = DateTime(evaluationDate.year, evaluationDate.month, evaluationDate.day);
-    final dateOnlyLast = DateTime(lastActive.year, lastActive.month, lastActive.day);
+    // Zero-out times using UTC to compare only calendar dates, completely avoiding DST boundary bugs!
+    final dateOnlyEval = DateTime.utc(evaluationDate.year, evaluationDate.month, evaluationDate.day);
+    final dateOnlyLast = DateTime.utc(lastActive.year, lastActive.month, lastActive.day);
 
     final differenceInDays = dateOnlyEval.difference(dateOnlyLast).inDays;
 

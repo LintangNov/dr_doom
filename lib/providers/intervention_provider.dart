@@ -331,13 +331,16 @@ class InterventionEngine extends Notifier<InterventionState> with WidgetsBinding
             .findFirst();
 
         if (latestSession != null) {
+          final clockService = const SystemClockService();
+          final uptimeNow = await clockService.getSystemUptime();
+          final now = DateTime.now();
+
           // Fetch and update UserProfile entirely inside a single atomic write transaction!
           await isar.writeTxn(() async {
             final profile = await isar.userProfiles.get(1);
             if (profile != null) {
               // 1. Keamanan: Pengecekan manipulasi waktu sistem menggunakan monotonic clock native
-              final clockService = const SystemClockService();
-              await clockService.checkAndDetectTimeManipulation(profile, DateTime.now());
+              clockService.checkAndDetectTimeManipulationSync(profile, now, uptimeNow);
 
               // 2. Evaluasi penambahan XP
               const xpCalculator = XPCalculator();
@@ -355,7 +358,7 @@ class InterventionEngine extends Notifier<InterventionState> with WidgetsBinding
               const streakManager = StreakManager();
               streakManager.evaluateStreak(
                 profile,
-                DateTime.now(),
+                now,
                 dailyPeakDrs: latestSession.peakDrs,
                 completedCognitiveBump: true,
               );

@@ -148,6 +148,11 @@ class DashboardScreen extends ConsumerWidget {
               ),
             ],
           ),
+          IconButton(
+            icon: Icon(Icons.settings_rounded, color: textSecondaryColor),
+            tooltip: 'Pengaturan Sistem',
+            onPressed: () => context.push('/settings'),
+          ),
           const SizedBox(width: 8),
         ],
         backgroundColor: Colors.transparent,
@@ -684,27 +689,6 @@ class DashboardScreen extends ConsumerWidget {
                           useHighContrast: useHighContrast,
                         ),
                       ],
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Button to return to onboarding (navigation check)
-                  Center(
-                    child: TextButton.icon(
-                      onPressed: () => context.go('/onboarding'),
-                      icon: const Icon(Icons.arrow_back),
-                      label: Text(
-                        'Kembali ke Onboarding',
-                        style: TextStyle(
-                          fontSize: textScaler.scale(14),
-                          fontWeight: FontWeight.bold,
-                          color: useHighContrast
-                              ? (theme.brightness == Brightness.dark
-                                  ? Colors.yellow
-                                  : Colors.black)
-                              : theme.colorScheme.primary,
-                        ),
-                      ),
                     ),
                   ),
                 ],

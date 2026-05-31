@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:isar_community/isar.dart';
 import '../presentation/screens/onboarding/onboarding_screen.dart';
 import '../presentation/screens/dashboard/dashboard_screen.dart';
+import '../presentation/screens/settings/settings_screen.dart';
 import '../providers/database_provider.dart';
 import '../data/models/user_profile.dart';
 
@@ -39,6 +40,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/dashboard',
         builder: (context, state) => const DashboardScreen(),
+      ),
+      GoRoute(
+        path: '/settings',
+        builder: (context, state) => const SettingsScreen(),
       ),
     ],
     errorBuilder: (context, state) => Scaffold(

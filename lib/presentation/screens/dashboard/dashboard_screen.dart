@@ -556,7 +556,6 @@ class DashboardScreen extends ConsumerWidget {
                                   await isar.userProfiles.put(p);
                                 }
                               });
-                              ref.invalidate(userProfileProvider);
                             } catch (e) {
                               debugPrint('DR_DOOM_ERROR: Failed to update threshold: $e');
                             } finally {

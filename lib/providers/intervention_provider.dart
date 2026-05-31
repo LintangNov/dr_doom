@@ -91,8 +91,8 @@ class InterventionEngine extends Notifier<InterventionState> with WidgetsBinding
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.paused || state == AppLifecycleState.detached) {
-      // Immediate flush when backgrounded or detached to prevent data loss
-      unawaited(_flushSessionToDisk());
+      // Immediate synchronous flush when backgrounded or detached to prevent data loss
+      _flushSessionToDisk(isSyncFlush: true);
     }
   }
 
@@ -373,9 +373,9 @@ class InterventionEngine extends Notifier<InterventionState> with WidgetsBinding
               await isar.userProfiles.put(profile);
             }
           });
-        }
-      } catch (e) {
-        // Safe guard
+      } catch (e, stack) {
+        print('DR_DOOM_ERROR in completeActiveSession: $e\n$stack');
+        rethrow;
       }
     });
   }

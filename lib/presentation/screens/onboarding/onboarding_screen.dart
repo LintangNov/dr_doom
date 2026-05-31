@@ -65,15 +65,6 @@ class OnboardingScreen extends ConsumerWidget {
               const Spacer(),
               ElevatedButton(
                 onPressed: () => context.go('/dashboard'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primaryLight,
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size(double.infinity, 56),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  elevation: 0,
-                ),
                 child: const Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [

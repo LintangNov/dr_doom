@@ -9,10 +9,12 @@ import android.provider.Settings
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
+import io.flutter.plugin.common.EventChannel
 
 class MainActivity : FlutterActivity() {
     private val CLOCK_CHANNEL = "com.example.dr_doom/system_clock"
     private val PERM_CHANNEL = "com.example.dr_doom/permissions"
+    private val EVENT_CHANNEL = "com.example.dr_doom/drs_stream"
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
@@ -61,6 +63,23 @@ class MainActivity : FlutterActivity() {
                 else -> result.notImplemented()
             }
         }
+
+        EventChannel(flutterEngine.dartExecutor.binaryMessenger, EVENT_CHANNEL).setStreamHandler(
+            object : EventChannel.StreamHandler {
+                override fun onListen(arguments: Any?, events: EventChannel.EventSink?) {
+                    AppAccessibilityService.drsListener = { drs ->
+                        runOnUiThread {
+                            events?.success(drs)
+                        }
+                    }
+                    AppAccessibilityService.instance?.calculateAndEmitDrs()
+                }
+
+                override fun onCancel(arguments: Any?) {
+                    AppAccessibilityService.drsListener = null
+                }
+            }
+        )
     }
 
     private fun isAccessibilityServiceEnabled(context: Context): Boolean {

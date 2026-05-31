@@ -70,13 +70,14 @@ class MyApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
     final interventionState = ref.watch(interventionProvider);
+    final themeMode = ref.watch(themeModeProvider);
 
     return GrayscaleFilter(
       child: MaterialApp.router(
         title: 'dr_doom',
         theme: AppColors.lightTheme,
         darkTheme: AppColors.darkTheme,
-        themeMode: ThemeMode.system,
+        themeMode: themeMode,
         routerConfig: router,
         debugShowCheckedModeBanner: false,
         builder: (context, child) {

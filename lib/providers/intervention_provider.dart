@@ -373,6 +373,7 @@ class InterventionEngine extends Notifier<InterventionState> with WidgetsBinding
               await isar.userProfiles.put(profile);
             }
           });
+        }
       } catch (e, stack) {
         print('DR_DOOM_ERROR in completeActiveSession: $e\n$stack');
         rethrow;

@@ -23,6 +23,10 @@ void _ensureDefaultProfileExists(Isar isar) async {
         lastActiveDate: DateTime.now(),
         unlockedBadgeIds: [],
         highRiskApps: [],
+        isOnboardingCompleted: false,
+        showPenaltyWarning: false,
+        doomscrollingThresholdMinutes: 20,
+        isMonitoringEnabled: true,
       );
 
       await isar.writeTxn(() async {
@@ -56,6 +60,10 @@ final userProfileProvider = StreamProvider<UserProfile>((ref) {
         lastActiveDate: DateTime.now(),
         unlockedBadgeIds: [],
         highRiskApps: [],
+        isOnboardingCompleted: false,
+        showPenaltyWarning: false,
+        doomscrollingThresholdMinutes: 20,
+        isMonitoringEnabled: true,
       );
     }
     return profile;

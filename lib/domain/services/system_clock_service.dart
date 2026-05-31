@@ -24,8 +24,13 @@ class SystemClockService {
   /// Validates the current system time against native monotonic uptime to detect manual manipulation.
   /// Modifies and returns whether time was manipulated.
   Future<bool> checkAndDetectTimeManipulation(UserProfile profile, DateTime systemTimeNow) async {
-    // If it was already flagged, keep it flagged or evaluate again
     final uptimeNow = await getSystemUptime();
+    return checkAndDetectTimeManipulationSync(profile, systemTimeNow, uptimeNow);
+  }
+
+  /// Validates system time against pre-fetched native uptime synchronously,
+  /// completely avoiding platform MethodChannel calls inside active database transactions.
+  bool checkAndDetectTimeManipulationSync(UserProfile profile, DateTime systemTimeNow, int uptimeNow) {
     final systemTimeMs = systemTimeNow.millisecondsSinceEpoch;
 
     // Calculate current estimated boot time (System Time - Monotonic Uptime)

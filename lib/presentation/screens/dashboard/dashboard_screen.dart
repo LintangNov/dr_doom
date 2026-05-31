@@ -7,7 +7,18 @@ import '../../../providers/intervention_provider.dart';
 import 'dart:ui';
 import '../../../data/models/user_profile.dart';
 
-final sliderValueProvider = StateProvider<double?>((ref) => null);
+class SliderValueNotifier extends Notifier<double?> {
+  @override
+  double? build() => null;
+
+  void update(double? val) {
+    state = val;
+  }
+}
+
+final sliderValueProvider = NotifierProvider<SliderValueNotifier, double?>(() {
+  return SliderValueNotifier();
+});
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -528,7 +539,7 @@ class DashboardScreen extends ConsumerWidget {
                           activeColor: const Color(0xFFF97316),
                           inactiveColor: const Color(0xFFFFECE5),
                           onChanged: (value) {
-                            ref.read(sliderValueProvider.notifier).state = value;
+                            ref.read(sliderValueProvider.notifier).update(value);
                           },
                           onChangeEnd: (value) async {
                             try {
@@ -544,7 +555,7 @@ class DashboardScreen extends ConsumerWidget {
                             } catch (e) {
                               debugPrint('DR_DOOM_ERROR: Failed to update threshold: $e');
                             } finally {
-                              ref.read(sliderValueProvider.notifier).state = null;
+                              ref.read(sliderValueProvider.notifier).update(null);
                             }
                           },
                         ),

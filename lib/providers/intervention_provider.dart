@@ -57,6 +57,7 @@ class InterventionEngine extends Notifier<InterventionState> with WidgetsBinding
   Isar get _isar => (_isarInstance ??= ref.read(isarProvider))!;
 
   final _profileMutex = AsyncMutex();
+  final _sessionMutex = AsyncMutex();
 
   @override
   InterventionState build() {
@@ -90,8 +91,8 @@ class InterventionEngine extends Notifier<InterventionState> with WidgetsBinding
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.paused || state == AppLifecycleState.detached) {
-      // Immediate flush when backgrounded or detached to prevent data loss
-      unawaited(_flushSessionToDisk());
+      // Immediate synchronous flush when backgrounded or detached to prevent data loss
+      _flushSessionToDisk(isSyncFlush: true);
     }
   }
 
@@ -174,99 +175,101 @@ class InterventionEngine extends Notifier<InterventionState> with WidgetsBinding
 
   /// Dynamically updates the current scroll session in-memory to prevent disk wear.
   Future<void> startOrUpdateSession(double drs) async {
-    try {
-      final isar = _isar;
-      final now = DateTime.now();
+    await _sessionMutex.protect(() async {
+      try {
+        final isar = _isar;
+        final now = DateTime.now();
 
-      // 1. Midnight crossing detection: if cached session is from a different day, split it!
-      if (_cachedSession != null) {
-        final dateOnlyNow = DateTime(now.year, now.month, now.day);
-        final dateOnlySessionStart = DateTime(
-          _cachedSession!.startTime.year,
-          _cachedSession!.startTime.month,
-          _cachedSession!.startTime.day,
-        );
-        if (dateOnlyNow.difference(dateOnlySessionStart).inDays != 0) {
-          // Midnight crossing detected! Set endTime of yesterday's session to 23:59:59.999
-          _cachedSession!.endTime = DateTime(
+        // 1. Midnight crossing detection: if cached session is from a different day, split it!
+        if (_cachedSession != null) {
+          final dateOnlyNow = DateTime(now.year, now.month, now.day);
+          final dateOnlySessionStart = DateTime(
             _cachedSession!.startTime.year,
             _cachedSession!.startTime.month,
             _cachedSession!.startTime.day,
-            23, 59, 59, 999,
           );
-          _isSessionDirty = true;
-          await _flushSessionToDisk();
-          
-          // Clear cached session so a new one is created for today!
-          _cachedSession = null;
-        }
-      }
-
-      // 2. If we don't have a cached session, try to load the latest or create one
-      if (_cachedSession == null) {
-        ScrollSession? latestSession;
-        if (mockLatestSessionForTest != null) {
-          latestSession = mockLatestSessionForTest;
-        } else {
-          latestSession = await isar.scrollSessions
-              .where()
-              .sortByStartTimeDesc()
-              .findFirst();
-        }
-
-        bool shouldCreateNew = false;
-        if (latestSession == null) {
-          shouldCreateNew = true;
-        } else {
-          final timeSinceEnd = now.difference(latestSession.endTime).inMinutes;
-          final dateOnlyNow = DateTime(now.year, now.month, now.day);
-          final dateOnlyLastSession = DateTime(
-            latestSession.startTime.year,
-            latestSession.startTime.month,
-            latestSession.startTime.day,
-          );
-          if (timeSinceEnd > 5 || 
-              latestSession.completedCognitiveBump || 
-              latestSession.isEvaded ||
-              dateOnlyNow.difference(dateOnlyLastSession).inDays != 0) {
-            shouldCreateNew = true;
+          if (dateOnlyNow.difference(dateOnlySessionStart).inDays != 0) {
+            // Midnight crossing detected! Set endTime of yesterday's session to 23:59:59.999
+            _cachedSession!.endTime = DateTime(
+              _cachedSession!.startTime.year,
+              _cachedSession!.startTime.month,
+              _cachedSession!.startTime.day,
+              23, 59, 59, 999,
+            );
+            _isSessionDirty = true;
+            await _flushSessionToDisk();
+            
+            // Clear cached session so a new one is created for today!
+            _cachedSession = null;
           }
         }
 
-        if (shouldCreateNew) {
-          _cachedSession = ScrollSession(
-            startTime: now,
-            endTime: now,
-            appPackageName: 'com.example.doomapp', // General app placeholder
-            peakDrs: drs,
-            avgDrs: drs,
-            swipeCount: 0,
-            tapCount: 0,
-            completedCognitiveBump: false,
-            isEvaded: false,
-          );
-          
-          // Write immediately on creation to generate database ID!
-          await isar.writeTxn(() async {
-            await isar.scrollSessions.put(_cachedSession!);
-          });
-        } else {
-          _cachedSession = latestSession;
-        }
-      }
+        // 2. If we don't have a cached session, try to load the latest or create one
+        if (_cachedSession == null) {
+          ScrollSession? latestSession;
+          if (mockLatestSessionForTest != null) {
+            latestSession = mockLatestSessionForTest;
+          } else {
+            latestSession = await isar.scrollSessions
+                .where()
+                .sortByStartTimeDesc()
+                .findFirst();
+          }
 
-      // 2. Update the session properties in-memory
-      if (_cachedSession != null) {
-        _cachedSession!.endTime = now;
-        if (drs > _cachedSession!.peakDrs) {
-          _cachedSession!.peakDrs = drs;
+          bool shouldCreateNew = false;
+          if (latestSession == null) {
+            shouldCreateNew = true;
+          } else {
+            final timeSinceEnd = now.difference(latestSession.endTime).inMinutes;
+            final dateOnlyNow = DateTime(now.year, now.month, now.day);
+            final dateOnlyLastSession = DateTime(
+              latestSession.startTime.year,
+              latestSession.startTime.month,
+              latestSession.startTime.day,
+            );
+            if (timeSinceEnd > 5 || 
+                latestSession.completedCognitiveBump || 
+                latestSession.isEvaded ||
+                dateOnlyNow.difference(dateOnlyLastSession).inDays != 0) {
+              shouldCreateNew = true;
+            }
+          }
+
+          if (shouldCreateNew) {
+            _cachedSession = ScrollSession(
+              startTime: now,
+              endTime: now,
+              appPackageName: 'com.example.doomapp', // General app placeholder
+              peakDrs: drs,
+              avgDrs: drs,
+              swipeCount: 0,
+              tapCount: 0,
+              completedCognitiveBump: false,
+              isEvaded: false,
+            );
+            
+            // Write immediately on creation to generate database ID!
+            await isar.writeTxn(() async {
+              await isar.scrollSessions.put(_cachedSession!);
+            });
+          } else {
+            _cachedSession = latestSession;
+          }
         }
-        _cachedSession!.avgDrs = (_cachedSession!.avgDrs + drs) / 2.0;
-        _isSessionDirty = true; // Mark as dirty (needs disk sync)
+
+        // 2. Update the session properties in-memory
+        if (_cachedSession != null) {
+          _cachedSession!.endTime = now;
+          if (drs > _cachedSession!.peakDrs) {
+            _cachedSession!.peakDrs = drs;
+          }
+          _cachedSession!.avgDrs = (_cachedSession!.avgDrs + drs) / 2.0;
+          _isSessionDirty = true; // Mark as dirty (needs disk sync)
+        }
+      } catch (e, stack) {
+        print('DR_DOOM_ERROR in startOrUpdateSession: $e\n$stack');
       }
-    } catch (e, stack) {
-      print('DR_DOOM_ERROR in startOrUpdateSession: $e\n$stack');
-    }
+    });
   }
 
   /// Persists any pending in-memory session changes to physical Isar database.
@@ -371,8 +374,9 @@ class InterventionEngine extends Notifier<InterventionState> with WidgetsBinding
             }
           });
         }
-      } catch (e) {
-        // Safe guard
+      } catch (e, stack) {
+        print('DR_DOOM_ERROR in completeActiveSession: $e\n$stack');
+        rethrow;
       }
     });
   }

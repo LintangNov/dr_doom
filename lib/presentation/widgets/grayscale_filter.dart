@@ -49,7 +49,7 @@ class GrayscaleFilter extends ConsumerWidget {
           child: child,
         );
       },
-      child: child,
+      child: RepaintBoundary(child: child),
     );
   }
 }

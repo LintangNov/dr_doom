@@ -77,7 +77,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               ),
             ),
           ),
-          Position(
+          Positioned(
             bottom: -50,
             left: -50,
             child: Container(

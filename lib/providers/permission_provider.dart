@@ -24,8 +24,11 @@ class PermissionState {
   }
 }
 
-class PermissionNotifier extends StateNotifier<PermissionState> {
-  PermissionNotifier() : super(const PermissionState());
+class PermissionNotifier extends Notifier<PermissionState> {
+  @override
+  PermissionState build() {
+    return const PermissionState();
+  }
 
   void grantAccessibility() {
     state = state.copyWith(accessibilityGranted: true);
@@ -44,6 +47,6 @@ class PermissionNotifier extends StateNotifier<PermissionState> {
   }
 }
 
-final permissionStateProvider = StateNotifierProvider<PermissionNotifier, PermissionState>((ref) {
+final permissionStateProvider = NotifierProvider<PermissionNotifier, PermissionState>(() {
   return PermissionNotifier();
 });

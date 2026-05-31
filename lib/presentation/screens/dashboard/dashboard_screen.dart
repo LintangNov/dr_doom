@@ -37,9 +37,7 @@ class DashboardScreen extends ConsumerWidget {
 
     final Color textPrimaryColor = useHighContrast
         ? (theme.brightness == Brightness.dark ? Colors.white : Colors.black)
-        : (theme.brightness == Brightness.dark
-            ? AppColors.textPrimaryDark
-            : AppColors.textPrimaryLight);
+        : theme.colorScheme.onSurface;
 
     final Color textSecondaryColor = useHighContrast
         ? (theme.brightness == Brightness.dark ? Colors.white70 : Colors.black87)
@@ -54,8 +52,8 @@ class DashboardScreen extends ConsumerWidget {
           )
         : Border.all(
             color: theme.brightness == Brightness.dark
-                ? Colors.grey.shade800
-                : Colors.grey.shade100,
+                ? const Color(0xFF1E293B)
+                : const Color(0xFFE2E2EC),
             width: 1.0,
           );
 
@@ -126,8 +124,10 @@ class DashboardScreen extends ConsumerWidget {
                       border: cardBorder,
                       gradient: useHighContrast
                           ? null
-                          : const LinearGradient(
-                              colors: AppColors.calmGradient,
+                          : LinearGradient(
+                              colors: theme.brightness == Brightness.dark
+                                  ? AppColors.calmGradientDark
+                                  : AppColors.calmGradientLight,
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                             ),
@@ -191,7 +191,7 @@ class DashboardScreen extends ConsumerWidget {
                                   ? (theme.brightness == Brightness.dark
                                       ? Colors.yellow
                                       : Colors.black)
-                                  : AppColors.secondaryDark,
+                                  : theme.colorScheme.secondary,
                             ),
                           ),
                         ),
@@ -303,14 +303,16 @@ class DashboardScreen extends ConsumerWidget {
                     mainAxisSpacing: 16,
                     childAspectRatio: 1.3,
                     children: [
-                      _buildStatCard(
+                       _buildStatCard(
                         context,
                         title: 'Active Streak',
                         value: '${profile.currentStreak} Hari',
                         icon: Icons.local_fire_department_rounded,
                         iconColor: useHighContrast
                             ? (theme.brightness == Brightness.dark ? Colors.yellow : Colors.black)
-                            : AppColors.doomOrangeLight,
+                            : (theme.brightness == Brightness.dark
+                                ? AppColors.doomOrangeDark
+                                : AppColors.doomOrangeLight),
                         useHighContrast: useHighContrast,
                         border: cardBorder,
                         cardColor: cardColor,
@@ -322,7 +324,9 @@ class DashboardScreen extends ConsumerWidget {
                         icon: Icons.emoji_events_rounded,
                         iconColor: useHighContrast
                             ? (theme.brightness == Brightness.dark ? Colors.yellow : Colors.black)
-                            : Colors.amber.shade700,
+                            : (theme.brightness == Brightness.dark
+                                ? const Color(0xFFFBBF24)
+                                : const Color(0xFFD97706)),
                         useHighContrast: useHighContrast,
                         border: cardBorder,
                         cardColor: cardColor,
@@ -355,13 +359,15 @@ class DashboardScreen extends ConsumerWidget {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceAround,
                           children: [
-                            _buildBadgeIcon(
+                             _buildBadgeIcon(
                               context,
                               id: 'Benih Kesadaran',
                               title: 'Benih Kesadaran',
                               description: 'Menyelesaikan bump pertama kali',
                               icon: Icons.spa_rounded,
-                              activeColor: AppColors.successGreenLight,
+                              activeColor: theme.brightness == Brightness.dark
+                                  ? AppColors.successGreenDark
+                                  : AppColors.successGreenLight,
                               isUnlocked: profile.unlockedBadgeIds.contains('Benih Kesadaran'),
                               useHighContrast: useHighContrast,
                             ),
@@ -371,7 +377,9 @@ class DashboardScreen extends ConsumerWidget {
                               title: 'Quick Recover',
                               description: 'DRS turun dari 80+ ke <30',
                               icon: Icons.offline_bolt_rounded,
-                              activeColor: Colors.cyan,
+                              activeColor: theme.brightness == Brightness.dark
+                                  ? const Color(0xFF22D3EE)
+                                  : const Color(0xFF0891B2),
                               isUnlocked: profile.unlockedBadgeIds.contains('Quick Recover'),
                               useHighContrast: useHighContrast,
                             ),
@@ -605,15 +613,15 @@ class DashboardScreen extends ConsumerWidget {
     }
 
     if (drs >= 90.0) {
-      return Colors.purpleAccent.shade400; // Kritis
+      return isDark ? const Color(0xFFC084FC) : const Color(0xFF9333EA); // Premium Kritis Purple
     } else if (drs >= 70.0) {
-      return AppColors.doomRedLight; // Risiko Tinggi
+      return isDark ? AppColors.doomRedDark : AppColors.doomRedLight; // Risiko Tinggi
     } else if (drs >= 50.0) {
-      return AppColors.doomOrangeLight; // Risiko Sedang
+      return isDark ? AppColors.doomOrangeDark : AppColors.doomOrangeLight; // Risiko Sedang
     } else if (drs >= 30.0) {
-      return Colors.amber; // Waspada
+      return isDark ? const Color(0xFFFBBF24) : const Color(0xFFD97706); // Waspada Amber
     } else {
-      return AppColors.successGreenLight; // Normal
+      return isDark ? AppColors.successGreenDark : AppColors.successGreenLight; // Normal Green
     }
   }
 

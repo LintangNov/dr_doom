@@ -90,17 +90,21 @@ class _CognitiveBumpOverlayState extends State<CognitiveBumpOverlay> {
               child: Container(
                 padding: const EdgeInsets.all(32.0),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.brightness == Brightness.light
-                      ? Colors.white.withValues(alpha: 0.9)
-                      : AppColors.surfaceDark.withValues(alpha: 0.85),
+                  color: theme.colorScheme.surface.withValues(alpha: 0.85),
                   borderRadius: BorderRadius.circular(32),
                   border: Border.all(
-                    color: AppColors.doomRedLight.withValues(alpha: 0.3),
+                    color: (theme.colorScheme.brightness == Brightness.dark
+                            ? AppColors.doomRedDark
+                            : AppColors.doomRedLight)
+                        .withValues(alpha: 0.3),
                     width: 2,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.doomRedLight.withValues(alpha: 0.15),
+                      color: (theme.colorScheme.brightness == Brightness.dark
+                              ? AppColors.doomRedDark
+                              : AppColors.doomRedLight)
+                          .withValues(alpha: 0.15),
                       blurRadius: 30,
                       spreadRadius: 5,
                     )
@@ -113,12 +117,17 @@ class _CognitiveBumpOverlayState extends State<CognitiveBumpOverlay> {
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: AppColors.doomRedLight.withValues(alpha: 0.1),
+                        color: (theme.colorScheme.brightness == Brightness.dark
+                                ? AppColors.doomRedDark
+                                : AppColors.doomRedLight)
+                            .withValues(alpha: 0.1),
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.warning_amber_rounded,
-                        color: AppColors.doomRedLight,
+                        color: theme.colorScheme.brightness == Brightness.dark
+                            ? AppColors.doomRedDark
+                            : AppColors.doomRedLight,
                         size: 48,
                       ),
                     ),
@@ -127,7 +136,9 @@ class _CognitiveBumpOverlayState extends State<CognitiveBumpOverlay> {
                       'DOOMSCROLLING TERDETEKSI',
                       textAlign: TextAlign.center,
                       style: theme.textTheme.titleLarge?.copyWith(
-                        color: AppColors.doomRedLight,
+                        color: theme.colorScheme.brightness == Brightness.dark
+                            ? AppColors.doomRedDark
+                            : AppColors.doomRedLight,
                         fontWeight: FontWeight.w800,
                         letterSpacing: 1.2,
                         fontSize: 20,
@@ -191,8 +202,10 @@ class _CognitiveBumpOverlayState extends State<CognitiveBumpOverlay> {
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(16),
-                          borderSide: const BorderSide(
-                            color: AppColors.doomRedLight,
+                          borderSide: BorderSide(
+                            color: theme.colorScheme.brightness == Brightness.dark
+                                ? AppColors.doomRedDark
+                                : AppColors.doomRedLight,
                             width: 2,
                           ),
                         ),
@@ -220,8 +233,12 @@ class _CognitiveBumpOverlayState extends State<CognitiveBumpOverlay> {
                           child: ElevatedButton(
                             onPressed: _handleSubmit,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.doomRedLight,
-                              foregroundColor: Colors.white,
+                              backgroundColor: theme.colorScheme.brightness == Brightness.dark
+                                  ? AppColors.doomRedDark
+                                  : AppColors.doomRedLight,
+                              foregroundColor: theme.colorScheme.brightness == Brightness.dark
+                                  ? const Color(0xFF080B14)
+                                  : Colors.white,
                               minimumSize: const Size(0, 56),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(16),

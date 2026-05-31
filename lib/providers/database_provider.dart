@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:isar_community/isar.dart';
 import '../data/models/user_profile.dart';
@@ -47,8 +48,8 @@ final userProfileProvider = StreamProvider<UserProfile>((ref) {
   // Trigger background initialization of default profile if not exists
   _ensureDefaultProfileExists(isar);
 
-  // Watch the user profile with ID 1 re-actively
-  return isar.userProfiles.watchObject(1).map((profile) {
+  // Watch the user profile with ID 1 re-actively and fire immediately to prevent Riverpod StreamProvider infinite loading
+  return isar.userProfiles.watchObject(1, fireImmediately: true).map((profile) {
     if (profile == null) {
       // Fallback fallback profile in case the database record is not written yet or deleted
       return UserProfile(
@@ -83,4 +84,17 @@ class HighContrastNotifier extends Notifier<bool> {
 
 final highContrastProvider = NotifierProvider<HighContrastNotifier, bool>(() {
   return HighContrastNotifier();
+});
+
+class ThemeModeNotifier extends Notifier<ThemeMode> {
+  @override
+  ThemeMode build() => ThemeMode.system;
+
+  void setThemeMode(ThemeMode mode) {
+    state = mode;
+  }
+}
+
+final themeModeProvider = NotifierProvider<ThemeModeNotifier, ThemeMode>(() {
+  return ThemeModeNotifier();
 });

@@ -22,6 +22,8 @@ class DashboardScreen extends ConsumerWidget {
     final currentDrs = interventionState.currentDrs;
     final interventionLevel = interventionState.level;
 
+    final themeMode = ref.watch(themeModeProvider);
+
     // Get user profile data dynamically from Isar
     final profileAsync = ref.watch(userProfileProvider);
 
@@ -72,6 +74,35 @@ class DashboardScreen extends ConsumerWidget {
           ),
         ),
         actions: [
+          // Dark/Light Theme Mode Toggle Button
+          IconButton(
+            icon: Icon(
+              themeMode == ThemeMode.dark
+                  ? Icons.light_mode_rounded
+                  : themeMode == ThemeMode.light
+                      ? Icons.dark_mode_rounded
+                      : Icons.brightness_auto_rounded,
+              color: textSecondaryColor,
+              size: 22,
+            ),
+            tooltip: themeMode == ThemeMode.dark
+                ? 'Ubah ke Mode Terang'
+                : themeMode == ThemeMode.light
+                    ? 'Ubah ke Mode Gelap'
+                    : 'Ubah ke Mode Sistem',
+            onPressed: () {
+              // Cycle: system -> light -> dark -> system
+              if (themeMode == ThemeMode.system) {
+                ref.read(themeModeProvider.notifier).setThemeMode(ThemeMode.light);
+              } else if (themeMode == ThemeMode.light) {
+                ref.read(themeModeProvider.notifier).setThemeMode(ThemeMode.dark);
+              } else {
+                ref.read(themeModeProvider.notifier).setThemeMode(ThemeMode.system);
+              }
+            },
+          ),
+          const SizedBox(width: 4),
+
           // Accessibility Switch for High Contrast Mode
           Row(
             children: [

@@ -98,7 +98,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               children: [
                 // Top Header Section
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 16.0, vertical: 8.0),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -107,10 +108,12 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                               decoration: BoxDecoration(
                                 color: Colors.white.withValues(alpha: 0.6),
                                 shape: BoxShape.circle,
-                                border: Border.all(color: const Color(0xFFE2E2EC)),
+                                border:
+                                    Border.all(color: const Color(0xFFE2E2EC)),
                               ),
                               child: IconButton(
-                                icon: const Icon(Icons.arrow_back, color: Color(0xFF0F172A)),
+                                icon: const Icon(Icons.arrow_back,
+                                    color: Color(0xFF0F172A)),
                                 onPressed: _previousPage,
                               ),
                             )
@@ -149,7 +152,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
                 // Dot Page Indicator & Footer Controls
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 24.0, vertical: 20.0),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -166,7 +170,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                             decoration: BoxDecoration(
                               color: isActive
                                   ? const Color(0xFF4A4CBE)
-                                  : const Color(0xFFB5BAFF).withValues(alpha: 0.5),
+                                  : const Color(0xFFB5BAFF)
+                                      .withValues(alpha: 0.5),
                               borderRadius: BorderRadius.circular(4),
                             ),
                           );
@@ -255,7 +260,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.lock_outline_rounded, color: Color(0xFF10B981), size: 20),
+                const Icon(Icons.lock_outline_rounded,
+                    color: Color(0xFF10B981), size: 20),
                 const SizedBox(width: 10),
                 Flexible(
                   child: Text(
@@ -278,7 +284,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   }
 
   // --- ACCESSIBILITY SCREEN (PAGE 2) ---
-  Widget _buildAccessibilityScreen(BuildContext context, TextScaler textScaler) {
+  Widget _buildAccessibilityScreen(
+      BuildContext context, TextScaler textScaler) {
     final permissionState = ref.watch(permissionStateProvider);
     final isGranted = permissionState.accessibilityGranted;
 
@@ -376,7 +383,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     height: 100,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      border: Border.all(color: const Color(0xFF4A4CBE), width: 8),
+                      border:
+                          Border.all(color: const Color(0xFF4A4CBE), width: 8),
                     ),
                   ),
                   const Positioned(
@@ -475,10 +483,12 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.9),
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: const Color(0xFFB5BAFF), width: 1.5),
+                        border: Border.all(
+                            color: const Color(0xFFB5BAFF), width: 1.5),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF4A4CBE).withValues(alpha: 0.1),
+                            color:
+                                const Color(0xFF4A4CBE).withValues(alpha: 0.1),
                             blurRadius: 10,
                             spreadRadius: 2,
                           )
@@ -500,7 +510,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           const SizedBox(height: 28),
 
           Text(
-            'Hamparan Intervensi',
+            'Overlay Intervensi',
             textAlign: TextAlign.center,
             style: GoogleFonts.manrope(
               fontSize: textScaler.scale(26.0),
@@ -523,7 +533,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           // Step-by-Step Settings Instruction Card
           _buildInstructionCard(
             textScaler,
-            title: 'Panduan Langkah Hamparan Intervensi:',
+            title: 'Panduan Langkah Overlay Intervensi:',
             steps: [
               'Ketuk tombol izin di bawah.',
               'Cari "dr_doom" dalam daftar aplikasi yang muncul.',
@@ -550,7 +560,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.55),
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.8), width: 1.5),
+        border:
+            Border.all(color: Colors.white.withValues(alpha: 0.8), width: 1.5),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.02),
@@ -564,7 +575,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   }
 
   // 2. Step-by-Step Instructions Card (Usability enhancer)
-  Widget _buildInstructionCard(TextScaler textScaler, {required String title, required List<String> steps}) {
+  Widget _buildInstructionCard(TextScaler textScaler,
+      {required String title, required List<String> steps}) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20.0),
@@ -641,12 +653,14 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       decoration: BoxDecoration(
         color: const Color(0xFFE8F7EC), // Pastel success green fill
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFAEEFB3).withValues(alpha: 0.5)),
+        border:
+            Border.all(color: const Color(0xFFAEEFB3).withValues(alpha: 0.5)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.verified_user_rounded, color: Color(0xFF0D9488), size: 20),
+          const Icon(Icons.verified_user_rounded,
+              color: Color(0xFF0D9488), size: 20),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
@@ -677,7 +691,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         onPressed: _nextPage,
         style: ElevatedButton.styleFrom(
           minimumSize: const Size(double.infinity, 56),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         ),
         child: const Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -690,32 +705,43 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       );
     } else if (_currentPage == 1) {
       // Screen 2: Accessibility
-      return ElevatedButton.styleFrom(
-        minimumSize: const Size(double.infinity, 56),
-      ).backgroundColor != null // Simple trigger
-          ? Container()
-          : AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
-              width: double.infinity,
-              height: 56,
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  ref.read(permissionStateProvider.notifier).grantAccessibility();
-                  Future.delayed(const Duration(milliseconds: 600), _nextPage);
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: isAccessibility ? const Color(0xFFE8F7EC) : const Color(0xFF4A4CBE),
-                  foregroundColor: isAccessibility ? const Color(0xFF0D9488) : Colors.white,
-                  side: isAccessibility ? const BorderSide(color: Color(0xFF10B981), width: 1.5) : null,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-                  elevation: 0,
-                ),
-                icon: Icon(isAccessibility ? Icons.check_circle_rounded : Icons.lock_outline_rounded, size: 20),
-                label: Text(
-                  isAccessibility ? 'Izin Aksesibilitas Diberikan ✔' : 'Berikan Izin Aksesibilitas',
-                ),
-              ),
-            );
+      return AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        width: double.infinity,
+        height: 56,
+        child: ElevatedButton.icon(
+          onPressed: () {
+            if (isAccessibility) {
+              _nextPage();
+            } else {
+              ref.read(permissionStateProvider.notifier).requestAccessibility();
+            }
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: isAccessibility
+                ? const Color(0xFFE8F7EC)
+                : const Color(0xFF4A4CBE),
+            foregroundColor:
+                isAccessibility ? const Color(0xFF0D9488) : Colors.white,
+            side: isAccessibility
+                ? const BorderSide(color: Color(0xFF10B981), width: 1.5)
+                : null,
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24)),
+            elevation: 0,
+          ),
+          icon: Icon(
+              isAccessibility
+                  ? Icons.check_circle_rounded
+                  : Icons.lock_outline_rounded,
+              size: 20),
+          label: Text(
+            isAccessibility
+                ? 'Izin Aksesibilitas Diberikan (Ketuk untuk Lanjut) ✔'
+                : 'Berikan Izin Aksesibilitas',
+          ),
+        ),
+      );
     } else if (_currentPage == 2) {
       // Screen 3: Usage Access
       return AnimatedContainer(
@@ -724,19 +750,30 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         height: 56,
         child: ElevatedButton.icon(
           onPressed: () {
-            ref.read(permissionStateProvider.notifier).grantUsageStats();
-            Future.delayed(const Duration(milliseconds: 600), _nextPage);
+            if (isUsage) {
+              _nextPage();
+            } else {
+              ref.read(permissionStateProvider.notifier).requestUsageStats();
+            }
           },
           style: ElevatedButton.styleFrom(
-            backgroundColor: isUsage ? const Color(0xFFE8F7EC) : const Color(0xFF4A4CBE),
+            backgroundColor:
+                isUsage ? const Color(0xFFE8F7EC) : const Color(0xFF4A4CBE),
             foregroundColor: isUsage ? const Color(0xFF0D9488) : Colors.white,
-            side: isUsage ? const BorderSide(color: Color(0xFF10B981), width: 1.5) : null,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+            side: isUsage
+                ? const BorderSide(color: Color(0xFF10B981), width: 1.5)
+                : null,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
             elevation: 0,
           ),
-          icon: Icon(isUsage ? Icons.check_circle_rounded : Icons.lock_outline_rounded, size: 20),
+          icon: Icon(
+              isUsage ? Icons.check_circle_rounded : Icons.lock_outline_rounded,
+              size: 20),
           label: Text(
-            isUsage ? 'Akses Penggunaan Diberikan ✔' : 'Berikan Akses Penggunaan',
+            isUsage
+                ? 'Akses Penggunaan Diberikan (Ketuk untuk Lanjut) ✔'
+                : 'Berikan Akses Penggunaan',
           ),
         ),
       );
@@ -752,21 +789,36 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             height: 56,
             child: OutlinedButton.icon(
               onPressed: () {
-                ref.read(permissionStateProvider.notifier).grantOverlay();
+                if (!isOverlay) {
+                  ref.read(permissionStateProvider.notifier).requestOverlay();
+                }
               },
               style: OutlinedButton.styleFrom(
-                backgroundColor: isOverlay ? const Color(0xFFE8F7EC) : Colors.white.withValues(alpha: 0.8),
-                foregroundColor: isOverlay ? const Color(0xFF0D9488) : const Color(0xFF0F172A),
+                backgroundColor: isOverlay
+                    ? const Color(0xFFE8F7EC)
+                    : Colors.white.withValues(alpha: 0.8),
+                foregroundColor: isOverlay
+                    ? const Color(0xFF0D9488)
+                    : const Color(0xFF0F172A),
                 side: BorderSide(
-                  color: isOverlay ? const Color(0xFF10B981) : const Color(0xFFDCDCE5),
+                  color: isOverlay
+                      ? const Color(0xFF10B981)
+                      : const Color(0xFFDCDCE5),
                   width: 1.5,
                 ),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(24)),
                 elevation: 0,
               ),
-              icon: Icon(isOverlay ? Icons.check_circle_rounded : Icons.layers_outlined, size: 20),
+              icon: Icon(
+                  isOverlay
+                      ? Icons.check_circle_rounded
+                      : Icons.layers_outlined,
+                  size: 20),
               label: Text(
-                isOverlay ? 'Izin Hamparan Diberikan ✔' : 'Berikan Izin Hamparan',
+                isOverlay
+                    ? 'Izin Overlay Diberikan ✔'
+                    : 'Berikan Izin Overlay',
               ),
             ),
           ),
@@ -775,27 +827,48 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           // Action button 2: Primary routing Finish
           ElevatedButton(
             onPressed: () async {
+              if (!isOverlay) {
+                // Request overlay first to prevent fake onboarding completion
+                await ref.read(permissionStateProvider.notifier).requestOverlay();
+                return;
+              }
               try {
                 final isar = ref.read(isarProvider);
-                final profile = await isar.userProfiles.get(1);
-                if (profile != null) {
-                  profile.isOnboardingCompleted = true;
-                  await isar.writeTxn(() async {
-                    await isar.userProfiles.put(profile);
-                  });
-                }
+                final profile = await isar.userProfiles.get(1) ??
+                    UserProfile(
+                      id: 1,
+                      totalXp: 0,
+                      currentLevel: 1,
+                      currentStreak: 0,
+                      longestStreak: 0,
+                      lastActiveDate: DateTime.now(),
+                      unlockedBadgeIds: [],
+                      highRiskApps: [],
+                      isOnboardingCompleted: false,
+                      showPenaltyWarning: false,
+                      doomscrollingThresholdMinutes: 20,
+                      isMonitoringEnabled: true,
+                    );
+
+                profile.isOnboardingCompleted = true;
+                await isar.writeTxn(() async {
+                  await isar.userProfiles.put(profile);
+                });
+                
               } catch (e) {
-                debugPrint('DR_DOOM_ERROR: Failed to save onboarding completed status: $e');
+                debugPrint(
+                    'DR_DOOM_ERROR: Failed to save onboarding completed status: $e');
               }
               if (context.mounted) {
                 context.go('/dashboard');
               }
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF4A4CBE),
+              backgroundColor: isOverlay ? const Color(0xFF4A4CBE) : Colors.grey,
               foregroundColor: Colors.white,
               minimumSize: const Size(double.infinity, 56),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24)),
               elevation: 0,
             ),
             child: const Row(

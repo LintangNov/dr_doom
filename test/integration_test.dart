@@ -106,6 +106,11 @@ class FakeIsar extends Fake implements Isar {
   }
 
   @override
+  T writeTxnSync<T>(T Function() callback, {bool silent = false}) {
+    return callback();
+  }
+
+  @override
   Future<bool> close({bool deleteFromDisk = false}) async {
     return true;
   }

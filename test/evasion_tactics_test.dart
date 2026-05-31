@@ -34,6 +34,11 @@ class FakeIsar extends Fake implements Isar {
   Future<T> writeTxn<T>(Future<T> Function() callback, {bool silent = false}) async {
     return await callback();
   }
+
+  @override
+  T writeTxnSync<T>(T Function() callback, {bool silent = false}) {
+    return callback();
+  }
 }
 
 void main() {

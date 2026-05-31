@@ -9,6 +9,7 @@ import '../domain/usecases/xp_calculator.dart';
 import '../domain/usecases/streak_manager.dart';
 import '../domain/usecases/achievement_checker.dart';
 import '../providers/background_risk_calculator.dart';
+import '../core/utils/async_mutex.dart';
 import 'database_provider.dart';
 
 enum InterventionLevel {
@@ -54,6 +55,8 @@ class InterventionEngine extends Notifier<InterventionState> with WidgetsBinding
 
   Isar? _isarInstance;
   Isar get _isar => (_isarInstance ??= ref.read(isarProvider))!;
+
+  final _profileMutex = AsyncMutex();
 
   @override
   InterventionState build() {
@@ -175,7 +178,31 @@ class InterventionEngine extends Notifier<InterventionState> with WidgetsBinding
       final isar = _isar;
       final now = DateTime.now();
 
-      // 1. If we don't have a cached session, try to load the latest or create one
+      // 1. Midnight crossing detection: if cached session is from a different day, split it!
+      if (_cachedSession != null) {
+        final dateOnlyNow = DateTime(now.year, now.month, now.day);
+        final dateOnlySessionStart = DateTime(
+          _cachedSession!.startTime.year,
+          _cachedSession!.startTime.month,
+          _cachedSession!.startTime.day,
+        );
+        if (dateOnlyNow.difference(dateOnlySessionStart).inDays != 0) {
+          // Midnight crossing detected! Set endTime of yesterday's session to 23:59:59.999
+          _cachedSession!.endTime = DateTime(
+            _cachedSession!.startTime.year,
+            _cachedSession!.startTime.month,
+            _cachedSession!.startTime.day,
+            23, 59, 59, 999,
+          );
+          _isSessionDirty = true;
+          await _flushSessionToDisk();
+          
+          // Clear cached session so a new one is created for today!
+          _cachedSession = null;
+        }
+      }
+
+      // 2. If we don't have a cached session, try to load the latest or create one
       if (_cachedSession == null) {
         ScrollSession? latestSession;
         if (mockLatestSessionForTest != null) {
@@ -192,7 +219,16 @@ class InterventionEngine extends Notifier<InterventionState> with WidgetsBinding
           shouldCreateNew = true;
         } else {
           final timeSinceEnd = now.difference(latestSession.endTime).inMinutes;
-          if (timeSinceEnd > 5 || latestSession.completedCognitiveBump || latestSession.isEvaded) {
+          final dateOnlyNow = DateTime(now.year, now.month, now.day);
+          final dateOnlyLastSession = DateTime(
+            latestSession.startTime.year,
+            latestSession.startTime.month,
+            latestSession.startTime.day,
+          );
+          if (timeSinceEnd > 5 || 
+              latestSession.completedCognitiveBump || 
+              latestSession.isEvaded ||
+              dateOnlyNow.difference(dateOnlyLastSession).inDays != 0) {
             shouldCreateNew = true;
           }
         }
@@ -259,82 +295,86 @@ class InterventionEngine extends Notifier<InterventionState> with WidgetsBinding
 
   /// Marks the current active scroll session as successfully completed (solved the cognitive bump).
   /// Performs anti-cheat time check, calculates XP gains, evaluates streaks and badge achievements.
+  /// Fully atomic using Isar writeTxn and serialized via AsyncMutex to prevent race conditions.
   Future<void> completeActiveSession() async {
-    try {
-      final isar = _isar;
-      
-      if (_cachedSession != null) {
-        _cachedSession!.completedCognitiveBump = true;
-        _cachedSession!.endTime = DateTime.now();
-        _isSessionDirty = true;
-        await _flushSessionToDisk();
-      } else {
-        final latestSession = await isar.scrollSessions
+    await _profileMutex.protect(() async {
+      try {
+        final isar = _isar;
+        
+        if (_cachedSession != null) {
+          _cachedSession!.completedCognitiveBump = true;
+          _cachedSession!.endTime = DateTime.now();
+          _isSessionDirty = true;
+          await _flushSessionToDisk();
+        } else {
+          final latestSession = await isar.scrollSessions
+              .where()
+              .sortByStartTimeDesc()
+              .findFirst();
+
+          if (latestSession != null && !latestSession.completedCognitiveBump) {
+            await isar.writeTxn(() async {
+              latestSession.completedCognitiveBump = true;
+              latestSession.endTime = DateTime.now();
+              await isar.scrollSessions.put(latestSession);
+            });
+          }
+        }
+
+        // Re-read to guarantee we have the final values
+        final latestSession = _cachedSession ?? await isar.scrollSessions
             .where()
             .sortByStartTimeDesc()
             .findFirst();
 
-        if (latestSession != null && !latestSession.completedCognitiveBump) {
+        if (latestSession != null) {
+          // Fetch and update UserProfile entirely inside a single atomic write transaction!
           await isar.writeTxn(() async {
-            latestSession.completedCognitiveBump = true;
-            latestSession.endTime = DateTime.now();
-            await isar.scrollSessions.put(latestSession);
+            final profile = await isar.userProfiles.get(1);
+            if (profile != null) {
+              // 1. Keamanan: Pengecekan manipulasi waktu sistem menggunakan monotonic clock native
+              final clockService = const SystemClockService();
+              await clockService.checkAndDetectTimeManipulation(profile, DateTime.now());
+
+              // 2. Evaluasi penambahan XP
+              const xpCalculator = XPCalculator();
+              final delta = xpCalculator.calculateDelta(
+                completedCognitiveBump: true,
+                sessionMinutes: latestSession.endTime.difference(latestSession.startTime).inSeconds / 60.0,
+                currentStreak: profile.currentStreak,
+                skippedCognitiveBump: false,
+                peakDrs: latestSession.peakDrs,
+              );
+
+              xpCalculator.applyXpChange(profile, delta);
+
+              // 3. Evaluasi Streak Harian
+              const streakManager = StreakManager();
+              streakManager.evaluateStreak(
+                profile,
+                DateTime.now(),
+                dailyPeakDrs: latestSession.peakDrs,
+                completedCognitiveBump: true,
+              );
+
+              // 4. Evaluasi Pencapaian & Badge
+              const checker = AchievementChecker();
+              checker.checkNewBadges(
+                profile,
+                totalCognitiveBumpsCompleted: 1,
+                initialDrs: latestSession.peakDrs,
+                finalDrs: 0.0,
+              );
+
+              // Persist the updated profile atomically
+              await isar.userProfiles.put(profile);
+            }
           });
         }
+      } catch (e) {
+        // Safe guard
       }
-
-      // Re-read to guarantee we have the final values
-      final latestSession = _cachedSession ?? await isar.scrollSessions
-          .where()
-          .sortByStartTimeDesc()
-          .findFirst();
-
-      if (latestSession != null) {
-        // Fetch UserProfile and update XP/Streak/Achievements
-        final profile = await isar.userProfiles.get(1);
-        if (profile != null) {
-          // 1. Keamanan: Pengecekan manipulasi waktu sistem menggunakan monotonic clock native
-          final clockService = const SystemClockService();
-          await clockService.checkAndDetectTimeManipulation(profile, DateTime.now());
-
-          // 2. Evaluasi penambahan XP
-          const xpCalculator = XPCalculator();
-          final delta = xpCalculator.calculateDelta(
-            completedCognitiveBump: true,
-            sessionMinutes: latestSession.endTime.difference(latestSession.startTime).inSeconds / 60.0,
-            currentStreak: profile.currentStreak,
-            skippedCognitiveBump: false,
-            peakDrs: latestSession.peakDrs,
-          );
-
-          xpCalculator.applyXpChange(profile, delta);
-
-          // 3. Evaluasi Streak Harian
-          const streakManager = StreakManager();
-          streakManager.evaluateStreak(
-            profile,
-            DateTime.now(),
-            dailyPeakDrs: latestSession.peakDrs,
-            completedCognitiveBump: true,
-          );
-
-          // 4. Evaluasi Pencapaian & Badge
-          const checker = AchievementChecker();
-          checker.checkNewBadges(
-            profile,
-            totalCognitiveBumpsCompleted: 1,
-            initialDrs: latestSession.peakDrs,
-            finalDrs: 0.0,
-          );
-
-          await isar.writeTxn(() async {
-            await isar.userProfiles.put(profile);
-          });
-        }
-      }
-    } catch (e) {
-      // Safe guard
-    }
+    });
   }
 
   InterventionLevel _evaluateInterventionLevel(double drs) {

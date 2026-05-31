@@ -17,9 +17,9 @@ void main() {
     // Verify that the Onboarding page contents are loaded
     expect(find.text('dr_doom'), findsOneWidget);
     expect(
-      find.text('Conquer your doomscrolling habits and reclaim your focus, on-device.'),
+      find.text('Taklukkan kebiasaan doomscrolling dan kembalikan fokus Anda.'),
       findsOneWidget,
     );
-    expect(find.text('Get Started'), findsOneWidget);
+    expect(find.text('Selanjutnya'), findsOneWidget);
   });
 }

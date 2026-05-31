@@ -53,10 +53,21 @@ void main() async {
   // Run startup recovery check defensively to penalize previous evasions (force close)
   await runStartupRecoveryCheck(isar);
 
+  // Read theme mode preference persistently
+  final String? savedTheme = await secureStorage.read(key: 'theme_mode');
+  ThemeMode initialTheme = ThemeMode.system;
+  if (savedTheme != null) {
+    initialTheme = ThemeMode.values.firstWhere(
+      (e) => e.toString() == savedTheme,
+      orElse: () => ThemeMode.system,
+    );
+  }
+
   runApp(
     ProviderScope(
       overrides: [
         isarProvider.overrideWithValue(isar),
+        themeModeProvider.overrideWith(() => ThemeModeNotifier(initialTheme)),
       ],
       child: const MyApp(),
     ),

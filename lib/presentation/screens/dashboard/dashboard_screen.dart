@@ -7,6 +7,19 @@ import '../../../providers/intervention_provider.dart';
 import 'dart:ui';
 import '../../../data/models/user_profile.dart';
 
+class SliderValueNotifier extends Notifier<double?> {
+  @override
+  double? build() => null;
+
+  void update(double? val) {
+    state = val;
+  }
+}
+
+final sliderValueProvider = NotifierProvider<SliderValueNotifier, double?>(() {
+  return SliderValueNotifier();
+});
+
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
 
@@ -26,6 +39,8 @@ class DashboardScreen extends ConsumerWidget {
 
     // Get user profile data dynamically from Isar
     final profileAsync = ref.watch(userProfileProvider);
+
+    final sliderValue = ref.watch(sliderValueProvider);
 
     final theme = Theme.of(context);
     final textScaler = MediaQuery.textScalerOf(context);
@@ -506,7 +521,7 @@ class DashboardScreen extends ConsumerWidget {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Text(
-                                '${profile.doomscrollingThresholdMinutes} Menit',
+                                '${(sliderValue ?? profile.doomscrollingThresholdMinutes.toDouble()).toInt()} Menit',
                                 style: const TextStyle(
                                   color: Color(0xFFF97316),
                                   fontWeight: FontWeight.w900,
@@ -517,13 +532,16 @@ class DashboardScreen extends ConsumerWidget {
                         ),
                         const SizedBox(height: 8),
                         Slider(
-                          value: profile.doomscrollingThresholdMinutes.toDouble(),
+                          value: sliderValue ?? profile.doomscrollingThresholdMinutes.toDouble(),
                           min: 5,
                           max: 60,
                           divisions: 11,
                           activeColor: const Color(0xFFF97316),
                           inactiveColor: const Color(0xFFFFECE5),
-                          onChanged: (value) async {
+                          onChanged: (value) {
+                            ref.read(sliderValueProvider.notifier).update(value);
+                          },
+                          onChangeEnd: (value) async {
                             try {
                               final isar = ref.read(isarProvider);
                               await isar.writeTxn(() async {
@@ -533,8 +551,11 @@ class DashboardScreen extends ConsumerWidget {
                                   await isar.userProfiles.put(p);
                                 }
                               });
+                              ref.invalidate(userProfileProvider);
                             } catch (e) {
                               debugPrint('DR_DOOM_ERROR: Failed to update threshold: $e');
+                            } finally {
+                              ref.read(sliderValueProvider.notifier).update(null);
                             }
                           },
                         ),

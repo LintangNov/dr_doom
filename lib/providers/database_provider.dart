@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:isar_community/isar.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../data/models/user_profile.dart';
 
 /// Provider to access the opened Isar database instance.
@@ -87,11 +88,20 @@ final highContrastProvider = NotifierProvider<HighContrastNotifier, bool>(() {
 });
 
 class ThemeModeNotifier extends Notifier<ThemeMode> {
-  @override
-  ThemeMode build() => ThemeMode.system;
+  final ThemeMode _initialTheme;
+  ThemeModeNotifier([this._initialTheme = ThemeMode.system]);
 
-  void setThemeMode(ThemeMode mode) {
+  @override
+  ThemeMode build() => _initialTheme;
+
+  Future<void> setThemeMode(ThemeMode mode) async {
     state = mode;
+    try {
+      const secureStorage = FlutterSecureStorage();
+      await secureStorage.write(key: 'theme_mode', value: mode.toString());
+    } catch (_) {
+      // Safe guard during tests
+    }
   }
 }
 

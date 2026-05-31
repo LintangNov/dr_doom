@@ -36,6 +36,7 @@ Future<void> runStartupRecoveryCheck(Isar isar, {List<ScrollSession>? mockSessio
         if (profile != null) {
           profile.currentStreak = 0; // Reset streak to 0 as penalty!
           profile.totalXp = (profile.totalXp - 100).clamp(0, 999999); // deduct 100 XP
+          profile.showPenaltyWarning = true; // Trigger UI warning dialog on dashboard startup
           await isar.userProfiles.put(profile);
         }
       });

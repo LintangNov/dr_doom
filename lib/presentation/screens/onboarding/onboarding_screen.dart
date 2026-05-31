@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../providers/permission_provider.dart';
+import '../../../providers/database_provider.dart';
+import '../../../data/models/user_profile.dart';
 
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
@@ -772,7 +774,23 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
           // Action button 2: Primary routing Finish
           ElevatedButton(
-            onPressed: () => context.go('/dashboard'),
+            onPressed: () async {
+              try {
+                final isar = ref.read(isarProvider);
+                final profile = await isar.userProfiles.get(1);
+                if (profile != null) {
+                  profile.isOnboardingCompleted = true;
+                  await isar.writeTxn(() async {
+                    await isar.userProfiles.put(profile);
+                  });
+                }
+              } catch (e) {
+                debugPrint('DR_DOOM_ERROR: Failed to save onboarding completed status: $e');
+              }
+              if (context.mounted) {
+                context.go('/dashboard');
+              }
+            },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF4A4CBE),
               foregroundColor: Colors.white,

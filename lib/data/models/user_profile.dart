@@ -20,6 +20,12 @@ class UserProfile {
   DateTime? lastSystemTime;
   bool isTimeManipulated;
 
+  // UX & Alur Pengguna (Revisi Audit)
+  bool isOnboardingCompleted;
+  bool showPenaltyWarning;
+  int doomscrollingThresholdMinutes;
+  bool isMonitoringEnabled;
+
   UserProfile({
     this.id,
     required this.totalXp,
@@ -33,6 +39,10 @@ class UserProfile {
     this.lastKnownUptime,
     this.lastSystemTime,
     this.isTimeManipulated = false,
+    this.isOnboardingCompleted = false,
+    this.showPenaltyWarning = false,
+    this.doomscrollingThresholdMinutes = 20,
+    this.isMonitoringEnabled = true,
   });
 
   factory UserProfile.fromJson(Map<String, dynamic> json) {
@@ -53,6 +63,10 @@ class UserProfile {
           ? DateTime.parse(json['lastSystemTime'] as String)
           : null,
       isTimeManipulated: json['isTimeManipulated'] as bool? ?? false,
+      isOnboardingCompleted: json['isOnboardingCompleted'] as bool? ?? false,
+      showPenaltyWarning: json['showPenaltyWarning'] as bool? ?? false,
+      doomscrollingThresholdMinutes: json['doomscrollingThresholdMinutes'] as int? ?? 20,
+      isMonitoringEnabled: json['isMonitoringEnabled'] as bool? ?? true,
     );
   }
 
@@ -70,6 +84,10 @@ class UserProfile {
       'lastKnownUptime': lastKnownUptime,
       'lastSystemTime': lastSystemTime?.toIso8601String(),
       'isTimeManipulated': isTimeManipulated,
+      'isOnboardingCompleted': isOnboardingCompleted,
+      'showPenaltyWarning': showPenaltyWarning,
+      'doomscrollingThresholdMinutes': doomscrollingThresholdMinutes,
+      'isMonitoringEnabled': isMonitoringEnabled,
     };
   }
 }

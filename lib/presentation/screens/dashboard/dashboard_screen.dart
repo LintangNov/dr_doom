@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../providers/database_provider.dart';
 import '../../../providers/intervention_provider.dart';
+import 'dart:ui';
+import '../../../data/models/user_profile.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -109,6 +111,12 @@ class DashboardScreen extends ConsumerWidget {
       body: SafeArea(
         child: profileAsync.when(
           data: (profile) {
+            if (profile.showPenaltyWarning) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                _showPenaltyDialog(context, ref, theme, textSecondaryColor);
+              });
+            }
+
             return SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
               child: Column(
@@ -335,6 +343,175 @@ class DashboardScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 24),
 
+                  // Autonomy Focus Switch Card
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(20.0),
+                    decoration: BoxDecoration(
+                      color: cardColor,
+                      borderRadius: BorderRadius.circular(24),
+                      border: cardBorder,
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: profile.isMonitoringEnabled
+                                ? const Color(0xFFE8F7EC)
+                                : const Color(0xFFFEE2E2),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            profile.isMonitoringEnabled
+                                ? Icons.security_rounded
+                                : Icons.security_update_warning_rounded,
+                            color: profile.isMonitoringEnabled
+                                ? const Color(0xFF10B981)
+                                : const Color(0xFFEF4444),
+                            size: 28,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                profile.isMonitoringEnabled
+                                    ? 'Perlindungan Aktif'
+                                    : 'Perlindungan Jeda',
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: textPrimaryColor,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                profile.isMonitoringEnabled
+                                    ? 'Aplikasi sedang memantau scrolling Anda untuk mencegah distraksi.'
+                                    : 'Fokus perlindungan dinonaktifkan sementara.',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: textSecondaryColor,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Switch(
+                          value: profile.isMonitoringEnabled,
+                          onChanged: (value) {
+                            if (value) {
+                              _enableMonitoring(ref);
+                            } else {
+                              _showMindfulPausePicker(context, ref, theme, textSecondaryColor);
+                            }
+                          },
+                          activeColor: const Color(0xFF10B981),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Custom Scrolling Limit Slider Card
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(20.0),
+                    decoration: BoxDecoration(
+                      color: cardColor,
+                      borderRadius: BorderRadius.circular(24),
+                      border: cardBorder,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: const BoxDecoration(
+                                color: Color(0xFFFFECE5),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.timer_outlined,
+                                color: Color(0xFFF97316),
+                                size: 20,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Text(
+                              'Target Batas Scrolling',
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: textPrimaryColor,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          'Tentukan batas maksimal waktu scrolling yang terdeteksi sebelum Cognitive Bump diaktifkan.',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: textSecondaryColor,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Batas Waktu:',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: textPrimaryColor,
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFFECE5),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                '${profile.doomscrollingThresholdMinutes} Menit',
+                                style: const TextStyle(
+                                  color: Color(0xFFF97316),
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Slider(
+                          value: profile.doomscrollingThresholdMinutes.toDouble(),
+                          min: 5,
+                          max: 60,
+                          divisions: 11,
+                          activeColor: const Color(0xFFF97316),
+                          inactiveColor: const Color(0xFFFFECE5),
+                          onChanged: (value) async {
+                            try {
+                              final isar = ref.read(isarProvider);
+                              await isar.writeTxn(() async {
+                                final p = await isar.userProfiles.get(1);
+                                if (p != null) {
+                                  p.doomscrollingThresholdMinutes = value.toInt();
+                                  await isar.userProfiles.put(p);
+                                }
+                              });
+                            } catch (e) {
+                              debugPrint('DR_DOOM_ERROR: Failed to update threshold: $e');
+                            }
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
                   // GAMIFICATION BADGES UNLOCKED LIST
                   Container(
                     width: double.infinity,
@@ -388,7 +565,77 @@ class DashboardScreen extends ConsumerWidget {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 24),
+
+                  // Panduan Istilah & Bantuan (Glossary/FAQ) Card
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(24.0),
+                    decoration: BoxDecoration(
+                      color: cardColor,
+                      borderRadius: BorderRadius.circular(24),
+                      border: cardBorder,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: const BoxDecoration(
+                                color: Color(0xFFEEF2FF),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.help_outline_rounded,
+                                color: Color(0xFF4A4CBE),
+                                size: 20,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Text(
+                              'Panduan Istilah & Bantuan',
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: textPrimaryColor,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        _buildGlossaryItem(
+                          context,
+                          title: 'DRS (Doomscrolling Risk Score)',
+                          description: 'Nilai dari 0 sampai 100 yang mendeteksi risiko doomscrolling berdasarkan kecepatan gulir dan durasi usapan layar Anda.',
+                          useHighContrast: useHighContrast,
+                        ),
+                        const Divider(height: 24, thickness: 1),
+                        _buildGlossaryItem(
+                          context,
+                          title: 'Active Streak (Hari Beruntun)',
+                          description: 'Berapa hari berturut-turut Anda berhasil menjaga scrolling di bawah batas aman. Reset otomatis jika Anda melanggar pantauan.',
+                          useHighContrast: useHighContrast,
+                        ),
+                        const Divider(height: 24, thickness: 1),
+                        _buildGlossaryItem(
+                          context,
+                          title: 'Intervensi & Cognitive Bump',
+                          description: 'Ketika DRS mencapai 70+, aplikasi akan memicu tantangan interaktif di layar (Cognitive Bump) untuk memutus kebiasaan gulir otomatis pikiran Anda.',
+                          useHighContrast: useHighContrast,
+                        ),
+                        const Divider(height: 24, thickness: 1),
+                        _buildGlossaryItem(
+                          context,
+                          title: 'Layanan Aksesibilitas',
+                          description: 'Izin wajib Android untuk melacak usapan layar secara lokal. Data dijamin 100% aman dan diproses langsung di perangkat Anda.',
+                          useHighContrast: useHighContrast,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
                   // Button to return to onboarding (navigation check)
                   Center(
                     child: TextButton.icon(
@@ -653,5 +900,304 @@ class DashboardScreen extends ConsumerWidget {
       case InterventionLevel.kritis:
         return 'Batas kritis! Selesaikan Cognitive Bump Challenge untuk membuka layar.';
     }
+  }
+
+  void _showPenaltyDialog(
+    BuildContext context,
+    WidgetRef ref,
+    ThemeData theme,
+    Color textSecondaryColor,
+  ) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(28),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+              child: Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: theme.brightness == Brightness.dark
+                      ? const Color(0xFF1E293B).withValues(alpha: 0.85)
+                      : Colors.white.withValues(alpha: 0.85),
+                  borderRadius: BorderRadius.circular(28),
+                  border: Border.all(
+                    color: theme.brightness == Brightness.dark
+                        ? Colors.white.withValues(alpha: 0.1)
+                        : Colors.black.withValues(alpha: 0.1),
+                  ),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFFEE2E2),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.warning_amber_rounded,
+                        color: Color(0xFFEF4444),
+                        size: 40,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      'Deteksi Upaya Menghindar!',
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: theme.colorScheme.error,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Kami mendeteksi bahwa aplikasi ditutup paksa saat Anda berada dalam kondisi Doomscrolling tingkat tinggi. Untuk menjaga kejujuran dan komitmen Anda, pinalti telah diterapkan:\n\n'
+                      '• Beruntun (Streak) reset menjadi 0 hari\n'
+                      '• Pengurangan sebesar -100 XP\n\n'
+                      'Jangan menyerah! Setiap kegagalan adalah langkah menuju kendali diri yang lebih baik. Mari kembali fokus hari ini!',
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: textSecondaryColor,
+                        height: 1.5,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    ElevatedButton(
+                      onPressed: () async {
+                        Navigator.of(context).pop();
+                        try {
+                          final isar = ref.read(isarProvider);
+                          await isar.writeTxn(() async {
+                            final p = await isar.userProfiles.get(1);
+                            if (p != null) {
+                              p.showPenaltyWarning = false;
+                              await isar.userProfiles.put(p);
+                            }
+                          });
+                        } catch (e) {
+                          debugPrint('DR_DOOM_ERROR: Failed to dismiss penalty warning: $e');
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFEF4444),
+                        foregroundColor: Colors.white,
+                        minimumSize: const Size(double.infinity, 48),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: const Text(
+                        'Saya Mengerti, Mulai Lagi',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showMindfulPausePicker(
+    BuildContext context,
+    WidgetRef ref,
+    ThemeData theme,
+    Color textSecondaryColor,
+  ) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(28),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+              child: Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: theme.brightness == Brightness.dark
+                      ? const Color(0xFF1E293B).withValues(alpha: 0.85)
+                      : Colors.white.withValues(alpha: 0.85),
+                  borderRadius: BorderRadius.circular(28),
+                  border: Border.all(
+                    color: theme.brightness == Brightness.dark
+                        ? Colors.white.withValues(alpha: 0.1)
+                        : Colors.black.withValues(alpha: 0.1),
+                  ),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.psychology_rounded,
+                      color: Color(0xFF4A4CBE),
+                      size: 44,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Jeda Fokus Sadar (Mindful Pause)',
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: theme.colorScheme.onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Apakah Anda yakin ingin menonaktifkan perlindungan? Pilih durasi jeda untuk bernapas sejenak sebelum kembali fokus.',
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: textSecondaryColor,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        _disableMonitoring(ref, 15);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Perlindungan dinonaktifkan selama 15 menit.'),
+                            backgroundColor: Color(0xFF4A4CBE),
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF4A4CBE).withValues(alpha: 0.1),
+                        foregroundColor: const Color(0xFF4A4CBE),
+                        minimumSize: const Size(double.infinity, 48),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: const Text('Jeda 15 Menit', style: TextStyle(fontWeight: FontWeight.bold)),
+                    ),
+                    const SizedBox(height: 10),
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        _disableMonitoring(ref, 60);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Perlindungan dinonaktifkan selama 1 jam.'),
+                            backgroundColor: Color(0xFF4A4CBE),
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF4A4CBE).withValues(alpha: 0.1),
+                        foregroundColor: const Color(0xFF4A4CBE),
+                        minimumSize: const Size(double.infinity, 48),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: const Text('Jeda 1 Jam', style: TextStyle(fontWeight: FontWeight.bold)),
+                    ),
+                    const SizedBox(height: 10),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                      style: TextButton.styleFrom(
+                        minimumSize: const Size(double.infinity, 48),
+                      ),
+                      child: Text(
+                        'Batal (Tetap Lindungi Saya)',
+                        style: TextStyle(
+                          color: textSecondaryColor,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _enableMonitoring(WidgetRef ref) async {
+    try {
+      final isar = ref.read(isarProvider);
+      await isar.writeTxn(() async {
+        final p = await isar.userProfiles.get(1);
+        if (p != null) {
+          p.isMonitoringEnabled = true;
+          await isar.userProfiles.put(p);
+        }
+      });
+    } catch (e) {
+      debugPrint('DR_DOOM_ERROR: Failed to enable monitoring: $e');
+    }
+  }
+
+  void _disableMonitoring(WidgetRef ref, int minutes) async {
+    try {
+      final isar = ref.read(isarProvider);
+      await isar.writeTxn(() async {
+        final p = await isar.userProfiles.get(1);
+        if (p != null) {
+          p.isMonitoringEnabled = false;
+          await isar.userProfiles.put(p);
+        }
+      });
+    } catch (e) {
+      debugPrint('DR_DOOM_ERROR: Failed to disable monitoring: $e');
+    }
+  }
+
+  Widget _buildGlossaryItem(
+    BuildContext context, {
+    required String title,
+    required String description,
+    required bool useHighContrast,
+  }) {
+    final theme = Theme.of(context);
+    final textScaler = MediaQuery.textScalerOf(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: theme.colorScheme.primary,
+            fontSize: textScaler.scale(13.0),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          description,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: useHighContrast
+                ? (theme.brightness == Brightness.dark ? Colors.white70 : Colors.black87)
+                : (theme.brightness == Brightness.dark
+                    ? AppColors.textSecondaryDark
+                    : AppColors.textSecondaryLight),
+            fontSize: textScaler.scale(12.0),
+            height: 1.4,
+          ),
+        ),
+      ],
+    );
   }
 }

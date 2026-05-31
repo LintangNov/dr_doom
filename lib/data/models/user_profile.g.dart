@@ -27,48 +27,68 @@ const UserProfileSchema = CollectionSchema(
       name: r'currentStreak',
       type: IsarType.long,
     ),
-    r'highRiskApps': PropertySchema(
+    r'doomscrollingThresholdMinutes': PropertySchema(
       id: 2,
+      name: r'doomscrollingThresholdMinutes',
+      type: IsarType.long,
+    ),
+    r'highRiskApps': PropertySchema(
+      id: 3,
       name: r'highRiskApps',
       type: IsarType.stringList,
     ),
+    r'isMonitoringEnabled': PropertySchema(
+      id: 4,
+      name: r'isMonitoringEnabled',
+      type: IsarType.bool,
+    ),
+    r'isOnboardingCompleted': PropertySchema(
+      id: 5,
+      name: r'isOnboardingCompleted',
+      type: IsarType.bool,
+    ),
     r'isTimeManipulated': PropertySchema(
-      id: 3,
+      id: 6,
       name: r'isTimeManipulated',
       type: IsarType.bool,
     ),
     r'lastActiveDate': PropertySchema(
-      id: 4,
+      id: 7,
       name: r'lastActiveDate',
       type: IsarType.dateTime,
     ),
     r'lastKnownBootTime': PropertySchema(
-      id: 5,
+      id: 8,
       name: r'lastKnownBootTime',
       type: IsarType.long,
     ),
     r'lastKnownUptime': PropertySchema(
-      id: 6,
+      id: 9,
       name: r'lastKnownUptime',
       type: IsarType.long,
     ),
     r'lastSystemTime': PropertySchema(
-      id: 7,
+      id: 10,
       name: r'lastSystemTime',
       type: IsarType.dateTime,
     ),
     r'longestStreak': PropertySchema(
-      id: 8,
+      id: 11,
       name: r'longestStreak',
       type: IsarType.long,
     ),
+    r'showPenaltyWarning': PropertySchema(
+      id: 12,
+      name: r'showPenaltyWarning',
+      type: IsarType.bool,
+    ),
     r'totalXp': PropertySchema(
-      id: 9,
+      id: 13,
       name: r'totalXp',
       type: IsarType.long,
     ),
     r'unlockedBadgeIds': PropertySchema(
-      id: 10,
+      id: 14,
       name: r'unlockedBadgeIds',
       type: IsarType.stringList,
     )
@@ -118,15 +138,19 @@ void _userProfileSerialize(
 ) {
   writer.writeLong(offsets[0], object.currentLevel);
   writer.writeLong(offsets[1], object.currentStreak);
-  writer.writeStringList(offsets[2], object.highRiskApps);
-  writer.writeBool(offsets[3], object.isTimeManipulated);
-  writer.writeDateTime(offsets[4], object.lastActiveDate);
-  writer.writeLong(offsets[5], object.lastKnownBootTime);
-  writer.writeLong(offsets[6], object.lastKnownUptime);
-  writer.writeDateTime(offsets[7], object.lastSystemTime);
-  writer.writeLong(offsets[8], object.longestStreak);
-  writer.writeLong(offsets[9], object.totalXp);
-  writer.writeStringList(offsets[10], object.unlockedBadgeIds);
+  writer.writeLong(offsets[2], object.doomscrollingThresholdMinutes);
+  writer.writeStringList(offsets[3], object.highRiskApps);
+  writer.writeBool(offsets[4], object.isMonitoringEnabled);
+  writer.writeBool(offsets[5], object.isOnboardingCompleted);
+  writer.writeBool(offsets[6], object.isTimeManipulated);
+  writer.writeDateTime(offsets[7], object.lastActiveDate);
+  writer.writeLong(offsets[8], object.lastKnownBootTime);
+  writer.writeLong(offsets[9], object.lastKnownUptime);
+  writer.writeDateTime(offsets[10], object.lastSystemTime);
+  writer.writeLong(offsets[11], object.longestStreak);
+  writer.writeBool(offsets[12], object.showPenaltyWarning);
+  writer.writeLong(offsets[13], object.totalXp);
+  writer.writeStringList(offsets[14], object.unlockedBadgeIds);
 }
 
 UserProfile _userProfileDeserialize(
@@ -138,16 +162,20 @@ UserProfile _userProfileDeserialize(
   final object = UserProfile(
     currentLevel: reader.readLong(offsets[0]),
     currentStreak: reader.readLong(offsets[1]),
-    highRiskApps: reader.readStringList(offsets[2]) ?? [],
+    doomscrollingThresholdMinutes: reader.readLongOrNull(offsets[2]) ?? 20,
+    highRiskApps: reader.readStringList(offsets[3]) ?? [],
     id: id,
-    isTimeManipulated: reader.readBoolOrNull(offsets[3]) ?? false,
-    lastActiveDate: reader.readDateTimeOrNull(offsets[4]),
-    lastKnownBootTime: reader.readLongOrNull(offsets[5]),
-    lastKnownUptime: reader.readLongOrNull(offsets[6]),
-    lastSystemTime: reader.readDateTimeOrNull(offsets[7]),
-    longestStreak: reader.readLong(offsets[8]),
-    totalXp: reader.readLong(offsets[9]),
-    unlockedBadgeIds: reader.readStringList(offsets[10]) ?? [],
+    isMonitoringEnabled: reader.readBoolOrNull(offsets[4]) ?? true,
+    isOnboardingCompleted: reader.readBoolOrNull(offsets[5]) ?? false,
+    isTimeManipulated: reader.readBoolOrNull(offsets[6]) ?? false,
+    lastActiveDate: reader.readDateTimeOrNull(offsets[7]),
+    lastKnownBootTime: reader.readLongOrNull(offsets[8]),
+    lastKnownUptime: reader.readLongOrNull(offsets[9]),
+    lastSystemTime: reader.readDateTimeOrNull(offsets[10]),
+    longestStreak: reader.readLong(offsets[11]),
+    showPenaltyWarning: reader.readBoolOrNull(offsets[12]) ?? false,
+    totalXp: reader.readLong(offsets[13]),
+    unlockedBadgeIds: reader.readStringList(offsets[14]) ?? [],
   );
   return object;
 }
@@ -164,22 +192,30 @@ P _userProfileDeserializeProp<P>(
     case 1:
       return (reader.readLong(offset)) as P;
     case 2:
-      return (reader.readStringList(offset) ?? []) as P;
+      return (reader.readLongOrNull(offset) ?? 20) as P;
     case 3:
-      return (reader.readBoolOrNull(offset) ?? false) as P;
+      return (reader.readStringList(offset) ?? []) as P;
     case 4:
-      return (reader.readDateTimeOrNull(offset)) as P;
+      return (reader.readBoolOrNull(offset) ?? true) as P;
     case 5:
-      return (reader.readLongOrNull(offset)) as P;
+      return (reader.readBoolOrNull(offset) ?? false) as P;
     case 6:
-      return (reader.readLongOrNull(offset)) as P;
+      return (reader.readBoolOrNull(offset) ?? false) as P;
     case 7:
       return (reader.readDateTimeOrNull(offset)) as P;
     case 8:
-      return (reader.readLong(offset)) as P;
+      return (reader.readLongOrNull(offset)) as P;
     case 9:
-      return (reader.readLong(offset)) as P;
+      return (reader.readLongOrNull(offset)) as P;
     case 10:
+      return (reader.readDateTimeOrNull(offset)) as P;
+    case 11:
+      return (reader.readLong(offset)) as P;
+    case 12:
+      return (reader.readBoolOrNull(offset) ?? false) as P;
+    case 13:
+      return (reader.readLong(offset)) as P;
+    case 14:
       return (reader.readStringList(offset) ?? []) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -383,6 +419,62 @@ extension UserProfileQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
         property: r'currentStreak',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      doomscrollingThresholdMinutesEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'doomscrollingThresholdMinutes',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      doomscrollingThresholdMinutesGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'doomscrollingThresholdMinutes',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      doomscrollingThresholdMinutesLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'doomscrollingThresholdMinutes',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      doomscrollingThresholdMinutesBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'doomscrollingThresholdMinutes',
         lower: lower,
         includeLower: includeLower,
         upper: upper,
@@ -681,6 +773,26 @@ extension UserProfileQueryFilter
         includeLower: includeLower,
         upper: upper,
         includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      isMonitoringEnabledEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'isMonitoringEnabled',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      isOnboardingCompletedEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'isOnboardingCompleted',
+        value: value,
       ));
     });
   }
@@ -1047,6 +1159,16 @@ extension UserProfileQueryFilter
     });
   }
 
+  QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition>
+      showPenaltyWarningEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'showPenaltyWarning',
+        value: value,
+      ));
+    });
+  }
+
   QueryBuilder<UserProfile, UserProfile, QAfterFilterCondition> totalXpEqualTo(
       int value) {
     return QueryBuilder.apply(this, (query) {
@@ -1364,6 +1486,48 @@ extension UserProfileQuerySortBy
   }
 
   QueryBuilder<UserProfile, UserProfile, QAfterSortBy>
+      sortByDoomscrollingThresholdMinutes() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'doomscrollingThresholdMinutes', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy>
+      sortByDoomscrollingThresholdMinutesDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'doomscrollingThresholdMinutes', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy>
+      sortByIsMonitoringEnabled() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isMonitoringEnabled', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy>
+      sortByIsMonitoringEnabledDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isMonitoringEnabled', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy>
+      sortByIsOnboardingCompleted() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isOnboardingCompleted', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy>
+      sortByIsOnboardingCompletedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isOnboardingCompleted', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy>
       sortByIsTimeManipulated() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isTimeManipulated', Sort.asc);
@@ -1443,6 +1607,20 @@ extension UserProfileQuerySortBy
     });
   }
 
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy>
+      sortByShowPenaltyWarning() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'showPenaltyWarning', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy>
+      sortByShowPenaltyWarningDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'showPenaltyWarning', Sort.desc);
+    });
+  }
+
   QueryBuilder<UserProfile, UserProfile, QAfterSortBy> sortByTotalXp() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'totalXp', Sort.asc);
@@ -1484,6 +1662,20 @@ extension UserProfileQuerySortThenBy
     });
   }
 
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy>
+      thenByDoomscrollingThresholdMinutes() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'doomscrollingThresholdMinutes', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy>
+      thenByDoomscrollingThresholdMinutesDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'doomscrollingThresholdMinutes', Sort.desc);
+    });
+  }
+
   QueryBuilder<UserProfile, UserProfile, QAfterSortBy> thenById() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.asc);
@@ -1493,6 +1685,34 @@ extension UserProfileQuerySortThenBy
   QueryBuilder<UserProfile, UserProfile, QAfterSortBy> thenByIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy>
+      thenByIsMonitoringEnabled() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isMonitoringEnabled', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy>
+      thenByIsMonitoringEnabledDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isMonitoringEnabled', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy>
+      thenByIsOnboardingCompleted() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isOnboardingCompleted', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy>
+      thenByIsOnboardingCompletedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isOnboardingCompleted', Sort.desc);
     });
   }
 
@@ -1576,6 +1796,20 @@ extension UserProfileQuerySortThenBy
     });
   }
 
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy>
+      thenByShowPenaltyWarning() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'showPenaltyWarning', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QAfterSortBy>
+      thenByShowPenaltyWarningDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'showPenaltyWarning', Sort.desc);
+    });
+  }
+
   QueryBuilder<UserProfile, UserProfile, QAfterSortBy> thenByTotalXp() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'totalXp', Sort.asc);
@@ -1603,9 +1837,30 @@ extension UserProfileQueryWhereDistinct
     });
   }
 
+  QueryBuilder<UserProfile, UserProfile, QDistinct>
+      distinctByDoomscrollingThresholdMinutes() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'doomscrollingThresholdMinutes');
+    });
+  }
+
   QueryBuilder<UserProfile, UserProfile, QDistinct> distinctByHighRiskApps() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'highRiskApps');
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QDistinct>
+      distinctByIsMonitoringEnabled() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'isMonitoringEnabled');
+    });
+  }
+
+  QueryBuilder<UserProfile, UserProfile, QDistinct>
+      distinctByIsOnboardingCompleted() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'isOnboardingCompleted');
     });
   }
 
@@ -1648,6 +1903,13 @@ extension UserProfileQueryWhereDistinct
     });
   }
 
+  QueryBuilder<UserProfile, UserProfile, QDistinct>
+      distinctByShowPenaltyWarning() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'showPenaltyWarning');
+    });
+  }
+
   QueryBuilder<UserProfile, UserProfile, QDistinct> distinctByTotalXp() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'totalXp');
@@ -1682,10 +1944,31 @@ extension UserProfileQueryProperty
     });
   }
 
+  QueryBuilder<UserProfile, int, QQueryOperations>
+      doomscrollingThresholdMinutesProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'doomscrollingThresholdMinutes');
+    });
+  }
+
   QueryBuilder<UserProfile, List<String>, QQueryOperations>
       highRiskAppsProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'highRiskApps');
+    });
+  }
+
+  QueryBuilder<UserProfile, bool, QQueryOperations>
+      isMonitoringEnabledProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'isMonitoringEnabled');
+    });
+  }
+
+  QueryBuilder<UserProfile, bool, QQueryOperations>
+      isOnboardingCompletedProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'isOnboardingCompleted');
     });
   }
 
@@ -1726,6 +2009,13 @@ extension UserProfileQueryProperty
   QueryBuilder<UserProfile, int, QQueryOperations> longestStreakProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'longestStreak');
+    });
+  }
+
+  QueryBuilder<UserProfile, bool, QQueryOperations>
+      showPenaltyWarningProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'showPenaltyWarning');
     });
   }
 
